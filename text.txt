@@ -1,16 +1,19 @@
-fn main() void {
-    var i: i32 = 6;
-    if (i <= 10){
-        i = 0;
-    }
-    // hello comment
-    /*
-     * This
-     * is
-     * a
-     * comment
-     */
-    if (i != /*comment*/ 0) {
-        System.out.println("/**/abc:?()");
+public class Main {
+    public class Subclass {}
+    fn main() void {
+        var i: i32 = 6;
+        if (i <= 10){
+            i = 0;
+        }
+        // hello comment
+        /*
+         * This
+         * is
+         * a
+         * comment
+         */
+        if (i != /*comment*/ 0) {
+            System.out.println("/**/abc:?()");
+        }
     }
 }

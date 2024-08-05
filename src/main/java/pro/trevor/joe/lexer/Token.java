@@ -26,8 +26,12 @@ public class Token {
         return text;
     }
 
-    public Location getLocation() {
+    public Location getEndLocation() {
         return location;
+    }
+
+    public Location getBeginLocation() {
+        return new Location(location.line(), location.character() - text.length());
     }
 
     @Override
