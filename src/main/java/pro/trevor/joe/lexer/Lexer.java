@@ -8,12 +8,16 @@ public class Lexer {
     private static final char INVALID = (char) -1;
 
     private final Iterator<Character> text;
+    private int previousLine;
+    private int previousCharacter;
     private int line;
     private int character;
     private char c;
 
     public Lexer(String text) {
         this.text = text.chars().mapToObj((i) -> (char) i).iterator();
+        this.previousLine = 1;
+        this.previousCharacter = 1;
         this.line = 1;
         this.character = 1;
         this.c = this.text.hasNext() ? this.text.next() : INVALID;
@@ -28,11 +32,11 @@ public class Lexer {
     }
 
     private Token token(TokenType type) {
-        return new Token(type, new Location(line, character));
+        return new Token(type, new Location(previousLine, previousCharacter));
     }
 
     private Token token(TokenType type, String text) {
-        return new Token(type, text, new Location(line, character));
+        return new Token(type, text, new Location(previousLine, previousCharacter));
     }
 
     private Token nextToken() {
@@ -126,7 +130,7 @@ public class Lexer {
     }
 
     private Token nextOperatorToken() {
-        TokenType t = null;
+        TokenType t;
         skipWhitespace();
         switch (c) {
             case '<' -> {
@@ -351,9 +355,12 @@ public class Lexer {
         } else {
             c = text.next();
             if (c == '\n') {
+                previousLine = line;
+                previousCharacter = character;
                 ++line;
                 character = 1;
             } else {
+                previousCharacter = character;
                 ++character;
             }
         }

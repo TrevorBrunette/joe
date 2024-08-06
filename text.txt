@@ -1,7 +1,7 @@
 public class Main {
     public class Subclass {}
     fn main() void {
-        var i: i32 = 6;
+        i32 i = 6;
         if (i <= 10){
             i = 0;
         }

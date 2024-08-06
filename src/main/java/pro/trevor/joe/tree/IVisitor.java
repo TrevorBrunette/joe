@@ -5,7 +5,6 @@ import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.literal.*;
 import pro.trevor.joe.tree.expression.binary.*;
 import pro.trevor.joe.tree.expression.unary.*;
-import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.statement.*;
 
 public interface IVisitor {

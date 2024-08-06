@@ -36,6 +36,6 @@ public class Token {
 
     @Override
     public String toString() {
-        return '\'' + text + '\'' + " @ " + location + " @ " + type.name();
+        return '\'' + text + '\'' + " @ " + getBeginLocation() + " @ " + type.name();
     }
 }

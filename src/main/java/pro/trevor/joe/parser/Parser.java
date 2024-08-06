@@ -9,6 +9,7 @@ import pro.trevor.joe.tree.Program;
 import pro.trevor.joe.tree.Symbol;
 import pro.trevor.joe.tree.declaration.*;
 import pro.trevor.joe.tree.expression.*;
+import pro.trevor.joe.tree.expression.binary.*;
 import pro.trevor.joe.tree.expression.literal.CharExpression;
 import pro.trevor.joe.tree.expression.literal.FloatExpression;
 import pro.trevor.joe.tree.expression.literal.IntegerExpression;
@@ -130,16 +131,10 @@ public class Parser {
 
             consume();
             expectAndConsume(TokenType.LBRACE);
-            int depth = 1;
-            while (depth > 0) {
-                if (token.getType() == TokenType.RBRACE) {
-                    --depth;
-                } else if (token.getType() == TokenType.LBRACE) {
-                    ++depth;
-                }
-//                code.addStatement(parseStatement(functionDeclaration));
-                consume();
+            while (token.getType() != TokenType.RBRACE) {
+                code.addStatement(parseStatement(parent));
             }
+            expectAndConsume(TokenType.RBRACE);
 
             functionDeclaration.setType(optionalReturnType.get());
             functionDeclaration.setCode(code);
@@ -241,8 +236,9 @@ public class Parser {
         Symbol identifier = new Symbol(parent, identifierToken.getText());
 
         if (token.getType() == TokenType.SEMICOLON) {
-            consume();
-            return new VariableDeclarationStatement(typeToken.getBeginLocation(), type, identifier);
+            VariableDeclarationStatement declaration = new VariableDeclarationStatement(typeToken.getBeginLocation(), type, identifier);
+            expectAndConsume(TokenType.SEMICOLON);
+            return declaration;
         } else if (token.getType() == TokenType.ASSIGN) {
             consume();
             VariableDeclarationStatement declaration = new VariableInitializationStatement(typeToken.getBeginLocation(), type, identifier, parseExpression(parent));
@@ -254,69 +250,79 @@ public class Parser {
     }
 
     private Expression parseExpression(MemberDeclaration parent) throws ParseException {
-        return parseExpression(parent, consume());
+        Token old = token;
+        consume();
+        return parseExpression(parent, old);
     }
 
     private Expression parseExpression(MemberDeclaration parent, Token first) throws ParseException {
         Expression result = parsePrimaryExpression(parent, first);
+        Token operation = token;
 
-        switch (token.getType()) {
+        if (!operation.getType().isBinaryOperator()) {
+            return result;
+        }
+
+        consume();
+        Expression rightExpression = parseExpression(parent);
+
+        switch (operation.getType()) {
             case PERIOD -> {
-
+                result = new VariableAccessExpression(result.location(), result, rightExpression);
             }
             case MUL -> {
-
+                result = new MultiplyExpression(result.location(), result, rightExpression);
             }
             case DIV -> {
-
+                result = new DivideExpression(result.location(), result, rightExpression);
             }
             case MOD -> {
-
+                result = new ModuloExpression(result.location(), result, rightExpression);
             }
             case SHIFT_LEFT -> {
-
+                result = new ShiftLeftExpression(result.location(), result, rightExpression);
             }
             case SHIFT_RIGHT -> {
-
+                result = new ShiftRightExpression(result.location(), result, rightExpression);
             }
             case SHIFT_RIGHT_LOGICAL -> {
-
+                result = new ShiftRightLogicalExpression(result.location(), result, rightExpression);
             }
             case LESS_THAN -> {
-
+                result = new LessThanExpression(result.location(), result, rightExpression);
             }
             case LESS_EQUAL -> {
-
+                result = new LessThanOrEqualsExpression(result.location(), result, rightExpression);
             }
             case GREATER_THAN -> {
-
+                result = new GreaterThanExpression(result.location(), result, rightExpression);
             }
             case GREATER_EQUAL -> {
-
+                result = new GreaterThanOrEqualsExpression(result.location(), result, rightExpression);
             }
             case EQUALS -> {
-
+                result = new EqualsExpression(result.location(), result, rightExpression);
             }
             case NOT_EQUALS -> {
-
+                result = new NotEqualsExpression(result.location(), result, rightExpression);
             }
             case BAND -> {
-
+                result = new BinaryAndExpression(result.location(), result, rightExpression);
             }
             case XOR -> {
-
+                result = new BinaryXorExpression(result.location(), result, rightExpression);
             }
             case BOR -> {
-
+                result = new BinaryOrExpression(result.location(), result, rightExpression);
             }
             case LAND -> {
-
+                result = new LogicalAndExpression(result.location(), result, rightExpression);
             }
             case LOR -> {
-
+                result = new LogicalOrExpression(result.location(), result, rightExpression);
             }
             case ASSIGN -> {
-
+                result = new AssignmentExpression(result.location(), result, rightExpression);
             }
         }
 
@@ -324,7 +330,9 @@ public class Parser {
     }
 
     private Expression parsePrimaryExpression(MemberDeclaration parent) throws ParseException {
-        return parsePrimaryExpression(parent, consume());
+        Token old = token;
+        consume();
+        return parsePrimaryExpression(parent, old);
     }
 
     private Expression parsePrimaryExpression(MemberDeclaration parent, Token first) throws ParseException {
