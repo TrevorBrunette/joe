@@ -1,7 +1,5 @@
 package pro.trevor.joe.tree.expression;
 
-import pro.trevor.joe.tree.expression.type.Type;
-
 public class WrappedExpression extends Expression {
 
     private final Expression expression;
@@ -13,11 +11,6 @@ public class WrappedExpression extends Expression {
 
     public Expression getExpression() {
         return expression;
-    }
-
-    @Override
-    public Type type() {
-        return expression.type();
     }
 
     @Override

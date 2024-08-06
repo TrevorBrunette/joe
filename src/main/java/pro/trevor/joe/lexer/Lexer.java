@@ -15,7 +15,7 @@ public class Lexer {
     public Lexer(String text) {
         this.text = text.chars().mapToObj((i) -> (char) i).iterator();
         this.line = 1;
-        this.character = 0;
+        this.character = 1;
         this.c = this.text.hasNext() ? this.text.next() : INVALID;
     }
 
@@ -352,7 +352,7 @@ public class Lexer {
             c = text.next();
             if (c == '\n') {
                 ++line;
-                character = 0;
+                character = 1;
             } else {
                 ++character;
             }

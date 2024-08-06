@@ -1,4 +1,4 @@
-package pro.trevor.joe.tree.expression.operation;
+package pro.trevor.joe.tree.expression.unary;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.expression.Expression;

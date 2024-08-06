@@ -3,7 +3,9 @@ package pro.trevor.joe.tree;
 import pro.trevor.joe.tree.declaration.*;
 import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.literal.*;
-import pro.trevor.joe.tree.expression.operation.*;
+import pro.trevor.joe.tree.expression.binary.*;
+import pro.trevor.joe.tree.expression.unary.*;
+import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.statement.*;
 
 public interface IVisitor {
@@ -86,7 +88,7 @@ public interface IVisitor {
 
             // Other expressions
             case ArrayIndexExpression x -> visit(x);
-            case LocalVariableExpression x -> visit(x);
+            case VariableExpression x -> visit(x);
             case MethodInvocationExpression x -> visit(x);
             case ObjectInstantiationExpression x -> visit(x);
             case VariableAccessExpression x -> visit(x);
@@ -127,7 +129,7 @@ public interface IVisitor {
     void visit(ShiftRightLogicalExpression shiftRightLogicalExpression);
     void visit(SubtractionExpression subtractionExpression);
     void visit(ArrayIndexExpression arrayIndexExpression);
-    void visit(LocalVariableExpression localVariableExpression);
+    void visit(VariableExpression localVariableExpression);
     void visit(MethodInvocationExpression methodInvocationExpression);
     void visit(ObjectInstantiationExpression objectInstantiationExpression);
     void visit(VariableAccessExpression variableAccessExpression);

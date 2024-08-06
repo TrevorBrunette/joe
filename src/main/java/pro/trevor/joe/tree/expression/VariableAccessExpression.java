@@ -2,19 +2,16 @@ package pro.trevor.joe.tree.expression;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.tree.expression.type.Type;
 
 public class VariableAccessExpression extends Expression {
 
     private final Expression leftExpression;
     private final Symbol variableName;
-    private final Type type;
 
-    public VariableAccessExpression(Location location, Expression leftExpression, Symbol variableName, Type type) {
+    public VariableAccessExpression(Location location, Expression leftExpression, Symbol variableName) {
         super(location);
         this.leftExpression = leftExpression;
         this.variableName = variableName;
-        this.type = type;
     }
 
     public Expression getLeftExpression() {
@@ -23,11 +20,6 @@ public class VariableAccessExpression extends Expression {
 
     public Symbol getVariableName() {
         return variableName;
-    }
-
-    @Override
-    public Type type() {
-        return type;
     }
 
     @Override

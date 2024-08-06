@@ -4,8 +4,10 @@ import pro.trevor.joe.tree.IStatement;
 import pro.trevor.joe.tree.IVisitor;
 import pro.trevor.joe.tree.declaration.*;
 import pro.trevor.joe.tree.expression.*;
+import pro.trevor.joe.tree.expression.binary.*;
 import pro.trevor.joe.tree.expression.literal.*;
-import pro.trevor.joe.tree.expression.operation.*;
+import pro.trevor.joe.tree.expression.unary.BinaryInvertExpression;
+import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.tree.statement.*;
 
 public class PrintVisitor implements IVisitor {
@@ -269,7 +271,7 @@ public class PrintVisitor implements IVisitor {
     }
 
     @Override
-    public void visit(LocalVariableExpression localVariableExpression) {
+    public void visit(VariableExpression localVariableExpression) {
 
     }
 

@@ -8,9 +8,15 @@ import pro.trevor.joe.tree.IStatement;
 import pro.trevor.joe.tree.Program;
 import pro.trevor.joe.tree.Symbol;
 import pro.trevor.joe.tree.declaration.*;
-import pro.trevor.joe.tree.expression.Expression;
+import pro.trevor.joe.tree.expression.*;
+import pro.trevor.joe.tree.expression.literal.CharExpression;
+import pro.trevor.joe.tree.expression.literal.FloatExpression;
+import pro.trevor.joe.tree.expression.literal.IntegerExpression;
+import pro.trevor.joe.tree.expression.literal.StringExpression;
 import pro.trevor.joe.tree.expression.type.ReturnType;
 import pro.trevor.joe.tree.expression.type.Type;
+import pro.trevor.joe.tree.expression.unary.BinaryInvertExpression;
+import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.tree.statement.*;
 
 import java.util.ArrayList;
@@ -28,7 +34,7 @@ public class Parser {
     public Parser(Lexer lexer) {
         this.lexer = lexer;
         this.errors = new ArrayList<>();
-        this.program = new Program(new Location(1, 0));
+        this.program = new Program(new Location(1, 1));
         consumeMaybeEof();
     }
 
@@ -169,7 +175,7 @@ public class Parser {
     }
 
     private IStatement parseStatement(MemberDeclaration parent) throws ParseException {
-        IStatement statement = null;
+        IStatement statement;
         switch (token.getType()) {
             case LBRACE -> {
                 statement = parseCodeBlock(parent);
@@ -252,7 +258,131 @@ public class Parser {
     }
 
     private Expression parseExpression(MemberDeclaration parent, Token first) throws ParseException {
-        return null;
+        Expression result = parsePrimaryExpression(parent, first);
+
+        switch (token.getType()) {
+            case PERIOD -> {
+
+            }
+            case MUL -> {
+
+            }
+            case DIV -> {
+
+            }
+            case MOD -> {
+
+            }
+            case SHIFT_LEFT -> {
+
+            }
+            case SHIFT_RIGHT -> {
+
+            }
+            case SHIFT_RIGHT_LOGICAL -> {
+
+            }
+            case LESS_THAN -> {
+
+            }
+            case LESS_EQUAL -> {
+
+            }
+            case GREATER_THAN -> {
+
+            }
+            case GREATER_EQUAL -> {
+
+            }
+            case EQUALS -> {
+
+            }
+            case NOT_EQUALS -> {
+
+            }
+            case BAND -> {
+
+            }
+            case XOR -> {
+
+            }
+            case BOR -> {
+
+            }
+            case LAND -> {
+
+            }
+            case LOR -> {
+
+            }
+            case ASSIGN -> {
+
+            }
+        }
+
+        return result;
+    }
+
+    private Expression parsePrimaryExpression(MemberDeclaration parent) throws ParseException {
+        return parsePrimaryExpression(parent, consume());
+    }
+
+    private Expression parsePrimaryExpression(MemberDeclaration parent, Token first) throws ParseException {
+        Expression expression;
+        switch (first.getType()) {
+            case LNOT -> {
+                return new LogicalInvertExpression(first.getBeginLocation(), parseExpression(parent));
+            }
+            case BNOT -> {
+                return new BinaryInvertExpression(first.getBeginLocation(), parseExpression(parent));
+            }
+            case LPAREN -> {
+                expression = new WrappedExpression(parseExpression(parent));
+                expectAndConsume(TokenType.RPAREN);
+            }
+            case NEW -> {
+                Token typeToken = expectAndConsume(TokenType.IDENTIFIER);
+                expectAndConsume(TokenType.LPAREN);
+                List<Expression> parameters = new ArrayList<>();
+                if (token.getType() != TokenType.RPAREN) {
+                    parameters.add(parseExpression(parent));
+                    while (token.getType() == TokenType.COMMA) {
+                        consume();
+                        parameters.add(parseExpression(parent));
+                    }
+                }
+                expectAndConsume(TokenType.RPAREN);
+                expression = new ObjectInstantiationExpression(first.getBeginLocation(), new Symbol(parent, typeToken.getText()), parameters);
+            }
+            case CHAR_IMMEDIATE -> {
+                expression = new CharExpression(first.getBeginLocation(), first.getText().substring(1, first.getText().length() - 1));
+            }
+            case STRING_IMMEDIATE -> {
+                expression = new StringExpression(first.getBeginLocation(), first.getText().substring(1, first.getText().length() - 1));
+            }
+            case FLOAT_IMMEDIATE -> {
+                expression = new FloatExpression(first.getBeginLocation(), first.getText());
+            }
+            case INTEGER_IMMEDIATE -> {
+                expression = new IntegerExpression(first.getBeginLocation(), first.getText());
+            }
+            case IDENTIFIER -> {
+                if (first.getType() == TokenType.LPAREN) {
+                    List<Expression> parameters = new ArrayList<>();
+                    parameters.add(parseExpression(parent));
+                    while (token.getType() == TokenType.COMMA) {
+                        consume();
+                        parameters.add(parseExpression(parent));
+                    }
+                    expectAndConsume(TokenType.RPAREN);
+                    expression = new MethodInvocationExpression(first.getBeginLocation(), new Symbol(parent, first.getText()), parameters);
+                } else {
+                    expression = new VariableExpression(first.getBeginLocation(), new Symbol(parent, first.getText()));
+                }
+            }
+            default -> throw new ParseException(first.getBeginLocation(), String.format("Unexpected start of expression '%s'", first.getText()));
+        }
+        return expression;
     }
 
     private Access consumeAccessIfPresent() throws ParseException {

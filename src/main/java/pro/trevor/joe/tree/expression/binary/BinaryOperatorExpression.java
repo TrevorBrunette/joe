@@ -1,6 +1,7 @@
-package pro.trevor.joe.tree.expression.operation;
+package pro.trevor.joe.tree.expression.binary;
 
 import pro.trevor.joe.lexer.Location;
+import pro.trevor.joe.tree.expression.Associativity;
 import pro.trevor.joe.tree.expression.Expression;
 
 public abstract class BinaryOperatorExpression extends Expression {

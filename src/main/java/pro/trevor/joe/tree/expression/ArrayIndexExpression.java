@@ -1,9 +1,6 @@
 package pro.trevor.joe.tree.expression;
 
 import pro.trevor.joe.lexer.Location;
-import pro.trevor.joe.tree.expression.type.ArrayType;
-import pro.trevor.joe.tree.expression.type.ReturnType;
-import pro.trevor.joe.tree.expression.type.Type;
 
 public class ArrayIndexExpression extends Expression {
 
@@ -12,8 +9,6 @@ public class ArrayIndexExpression extends Expression {
 
     public ArrayIndexExpression(Location location, Expression array, Expression index) {
         super(location);
-        assert array.type().getReturnType() == ReturnType.ARRAY;
-        assert index.type().getReturnType().isUnsigned();
         this.array = array;
         this.index = index;
     }
@@ -24,11 +19,6 @@ public class ArrayIndexExpression extends Expression {
 
     public Expression getIndex() {
         return index;
-    }
-
-    @Override
-    public Type type() {
-        return ((ArrayType) array.type()).getArrayType();
     }
 
     @Override

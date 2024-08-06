@@ -1,29 +1,27 @@
 package pro.trevor.joe.tree.expression;
 
 import pro.trevor.joe.lexer.Location;
-import pro.trevor.joe.tree.expression.type.ClassType;
-import pro.trevor.joe.tree.expression.type.Type;
+import pro.trevor.joe.tree.Symbol;
 
 import java.util.List;
 
 public class ObjectInstantiationExpression extends Expression {
 
-    private final ClassType type;
+    private final Symbol type;
     private final List<Expression> parameters;
 
-    public ObjectInstantiationExpression(Location location, ClassType type, List<Expression> parameters) {
+    public ObjectInstantiationExpression(Location location, Symbol type, List<Expression> parameters) {
         super(location);
         this.type = type;
         this.parameters = parameters;
     }
 
-    public List<Expression> getParameters() {
-        return parameters;
+    public Symbol getType() {
+        return type;
     }
 
-    @Override
-    public Type type() {
-        return type;
+    public List<Expression> getParameters() {
+        return parameters;
     }
 
     @Override
