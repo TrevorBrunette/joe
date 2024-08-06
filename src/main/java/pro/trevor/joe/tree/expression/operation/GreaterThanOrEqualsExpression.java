@@ -7,7 +7,7 @@ import pro.trevor.joe.tree.expression.type.Type;
 
 public class GreaterThanOrEqualsExpression extends BinaryOperatorExpression {
     public GreaterThanOrEqualsExpression(Location location, Expression leftOperand, Expression rightOperand) {
-        super(location, leftOperand, rightOperand);
+        super(location, leftOperand, rightOperand, 9, Associativity.LEFT_TO_RIGHT);
     }
 
     @Override

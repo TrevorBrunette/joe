@@ -7,7 +7,7 @@ import pro.trevor.joe.tree.expression.type.Type;
 
 public class LogicalAndExpression extends BinaryOperatorExpression {
     public LogicalAndExpression(Location location, Expression leftOperand, Expression rightOperand) {
-        super(location, leftOperand, rightOperand);
+        super(location, leftOperand, rightOperand, 4, Associativity.LEFT_TO_RIGHT);
     }
 
     @Override

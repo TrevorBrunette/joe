@@ -2,7 +2,6 @@ package pro.trevor.joe.tree.expression;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.tree.expression.type.ReturnType;
 import pro.trevor.joe.tree.expression.type.Type;
 
 public class VariableAccessExpression extends Expression {

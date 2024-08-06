@@ -7,7 +7,7 @@ import pro.trevor.joe.tree.expression.type.Type;
 
 public class LessThanExpression extends BinaryOperatorExpression {
     public LessThanExpression(Location location, Expression leftOperand, Expression rightOperand) {
-        super(location, leftOperand, rightOperand);
+        super(location, leftOperand, rightOperand, 9, Associativity.LEFT_TO_RIGHT);
     }
 
     @Override

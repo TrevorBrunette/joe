@@ -7,11 +7,15 @@ public abstract class BinaryOperatorExpression extends Expression {
 
     protected final Expression leftOperand;
     protected final Expression rightOperand;
+    protected final int priority;
+    protected final Associativity associativity;
 
-    public BinaryOperatorExpression(Location location, Expression leftOperand, Expression rightOperand) {
+    public BinaryOperatorExpression(Location location, Expression leftOperand, Expression rightOperand, int priority, Associativity associativity) {
         super(location);
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
+        this.priority = priority;
+        this.associativity = associativity;
     }
 
     public Expression getLeftOperand() {
@@ -20,6 +24,10 @@ public abstract class BinaryOperatorExpression extends Expression {
 
     public Expression getRightOperand() {
         return rightOperand;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     @Override

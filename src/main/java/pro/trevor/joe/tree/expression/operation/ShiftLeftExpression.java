@@ -6,7 +6,7 @@ import pro.trevor.joe.tree.expression.type.Type;
 
 public class ShiftLeftExpression extends BinaryOperatorExpression {
     public ShiftLeftExpression(Location location, Expression leftOperand, Expression rightOperand) {
-        super(location, leftOperand, rightOperand);
+        super(location, leftOperand, rightOperand, 10, Associativity.LEFT_TO_RIGHT);
     }
 
     @Override

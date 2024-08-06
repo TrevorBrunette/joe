@@ -1,10 +1,7 @@
 package pro.trevor.joe.tree;
 
 import pro.trevor.joe.tree.declaration.*;
-import pro.trevor.joe.tree.expression.ArrayIndexExpression;
-import pro.trevor.joe.tree.expression.Expression;
-import pro.trevor.joe.tree.expression.LocalVariableExpression;
-import pro.trevor.joe.tree.expression.VariableAccessExpression;
+import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.literal.*;
 import pro.trevor.joe.tree.expression.operation.*;
 import pro.trevor.joe.tree.statement.*;
@@ -90,7 +87,10 @@ public interface IVisitor {
             // Other expressions
             case ArrayIndexExpression x -> visit(x);
             case LocalVariableExpression x -> visit(x);
+            case MethodInvocationExpression x -> visit(x);
+            case ObjectInstantiationExpression x -> visit(x);
             case VariableAccessExpression x -> visit(x);
+            case WrappedExpression x -> visit(x);
 
             default -> throw new Error("Unhandled visiting of " + expression.getClass().getSimpleName());
         }
@@ -128,5 +128,8 @@ public interface IVisitor {
     void visit(SubtractionExpression subtractionExpression);
     void visit(ArrayIndexExpression arrayIndexExpression);
     void visit(LocalVariableExpression localVariableExpression);
+    void visit(MethodInvocationExpression methodInvocationExpression);
+    void visit(ObjectInstantiationExpression objectInstantiationExpression);
     void visit(VariableAccessExpression variableAccessExpression);
+    void visit(WrappedExpression wrappedExpression);
 }

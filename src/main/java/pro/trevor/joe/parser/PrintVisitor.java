@@ -3,9 +3,7 @@ package pro.trevor.joe.parser;
 import pro.trevor.joe.tree.IStatement;
 import pro.trevor.joe.tree.IVisitor;
 import pro.trevor.joe.tree.declaration.*;
-import pro.trevor.joe.tree.expression.ArrayIndexExpression;
-import pro.trevor.joe.tree.expression.LocalVariableExpression;
-import pro.trevor.joe.tree.expression.VariableAccessExpression;
+import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.literal.*;
 import pro.trevor.joe.tree.expression.operation.*;
 import pro.trevor.joe.tree.statement.*;
@@ -276,7 +274,22 @@ public class PrintVisitor implements IVisitor {
     }
 
     @Override
+    public void visit(MethodInvocationExpression methodInvocationExpression) {
+
+    }
+
+    @Override
+    public void visit(ObjectInstantiationExpression objectInstantiationExpression) {
+
+    }
+
+    @Override
     public void visit(VariableAccessExpression variableAccessExpression) {
+
+    }
+
+    @Override
+    public void visit(WrappedExpression wrappedExpression) {
 
     }
 

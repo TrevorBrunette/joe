@@ -222,7 +222,7 @@ public class Parser {
                         statement = parseVariableDeclaration(parent, first, second);
                     } else {
                         // Expression
-                        statement = new ExpressionStatement(first.getBeginLocation(), parseExpression(parent));
+                        statement = new ExpressionStatement(first.getBeginLocation(), parseExpression(parent, first));
                     }
                 }
             }
@@ -247,7 +247,11 @@ public class Parser {
         }
     }
 
-    private Expression parseExpression(MemberDeclaration parent) {
+    private Expression parseExpression(MemberDeclaration parent) throws ParseException {
+        return parseExpression(parent, consume());
+    }
+
+    private Expression parseExpression(MemberDeclaration parent, Token first) throws ParseException {
         return null;
     }
 
@@ -269,7 +273,6 @@ public class Parser {
                 return Access.PRIVATE;
             }
         }
-
     }
 
     private boolean consumeStaticIfPresent() throws ParseException{
