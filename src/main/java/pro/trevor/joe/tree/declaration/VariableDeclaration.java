@@ -2,11 +2,21 @@ package pro.trevor.joe.tree.declaration;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.tree.expression.type.Type;
 
 public class VariableDeclaration extends MemberDeclaration {
 
-    public VariableDeclaration(Location location, Type type, Symbol identifier, ClassDeclaration classDeclaration, Access access, boolean isStatic, boolean isFinal) {
-        super(location, type, identifier, classDeclaration, access, isStatic, isFinal);
+    private Symbol type;
+
+    public VariableDeclaration(Location location, Symbol identifier, ClassDeclaration classDeclaration, Access access, boolean isStatic, boolean isFinal, Symbol type) {
+        super(location, identifier, classDeclaration, access, isStatic, isFinal);
+        this.type = type;
+    }
+
+    public Symbol getType() {
+        return type;
+    }
+
+    public void setType(Symbol type) {
+        this.type = type;
     }
 }

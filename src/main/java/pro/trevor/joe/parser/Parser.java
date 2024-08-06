@@ -14,15 +14,14 @@ import pro.trevor.joe.tree.expression.literal.CharExpression;
 import pro.trevor.joe.tree.expression.literal.FloatExpression;
 import pro.trevor.joe.tree.expression.literal.IntegerExpression;
 import pro.trevor.joe.tree.expression.literal.StringExpression;
-import pro.trevor.joe.tree.expression.type.ReturnType;
-import pro.trevor.joe.tree.expression.type.Type;
+import pro.trevor.joe.type.ReturnType;
+import pro.trevor.joe.type.Type;
 import pro.trevor.joe.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.tree.statement.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class Parser {
 
@@ -100,7 +99,7 @@ public class Parser {
             consume();
             Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
 
-            FunctionDeclaration functionDeclaration = new FunctionDeclaration(beginning, new Symbol(parent, identifierToken.getText()), parent, isStatic, isFinal, new ArrayList<>(), null, null);
+            FunctionDeclaration functionDeclaration = new FunctionDeclaration(beginning, new Symbol(parent, identifierToken.getText()), parent, isStatic, isFinal, null, new ArrayList<>(), null);
 
             expectAndConsume(TokenType.LPAREN);
             int number = 0;
@@ -108,11 +107,7 @@ public class Parser {
                 do {
                     Token parameterType = token;
                     Token parameterIdentifier = expectAndConsume(TokenType.IDENTIFIER);
-                    Optional<Type> optionalParameterReturnType = ReturnType.typeFromToken(token, functionDeclaration);
-                    if (optionalParameterReturnType.isEmpty()) {
-                        throw new ParseException(parameterType.getBeginLocation(), "Parameter type must be primitive or an identifier");
-                    }
-                    functionDeclaration.getArguments().add(new ParameterDeclaration(parameterType.getBeginLocation(), optionalParameterReturnType.get(), new Symbol(functionDeclaration, parameterIdentifier.getText()), functionDeclaration, number++));
+                    functionDeclaration.getArguments().add(new ParameterDeclaration(parameterType.getBeginLocation(), new Symbol(functionDeclaration, parameterType.getText()), new Symbol(functionDeclaration, parameterIdentifier.getText()), functionDeclaration, number++));
                     if (token.getType() == TokenType.COMMA) {
                         consume();
                     }
@@ -122,11 +117,6 @@ public class Parser {
             expectAndConsume(TokenType.RPAREN);
 
             Token typeToken = token;
-            Optional<Type> optionalReturnType = ReturnType.typeFromToken(token, parent);
-            if (optionalReturnType.isEmpty()) {
-                throw new ParseException(typeToken.getBeginLocation(), "Function type must be primitive or an identifier");
-            }
-
             Block code = new Block(token.getBeginLocation());
 
             consume();
@@ -136,20 +126,16 @@ public class Parser {
             }
             expectAndConsume(TokenType.RBRACE);
 
-            functionDeclaration.setType(optionalReturnType.get());
+            functionDeclaration.setReturnType(new Symbol(parent, typeToken.getText()));
             functionDeclaration.setCode(code);
             declaration = functionDeclaration;
         } else if (token.getType() == TokenType.IDENTIFIER || token.getType().isPrimitive()){
             // Member variable declaration
             Token typeToken = token;
             Token identifierToken = consume();
+            consume();
             expectAndConsume(TokenType.SEMICOLON);
-            Optional<Type> optionalReturnType = ReturnType.typeFromToken(token, parent);
-            if (optionalReturnType.isEmpty()) {
-                throw new ParseException(typeToken.getBeginLocation(), "Member variable type must be primitive or an identifier");
-            }
-            Type returnType = optionalReturnType.get();
-            declaration = new VariableDeclaration(typeToken.getBeginLocation(), returnType, new Symbol(parent, identifierToken.getText()), parent, access, isStatic, isFinal);
+            declaration = new VariableDeclaration(typeToken.getBeginLocation(), new Symbol(parent, identifierToken.getText()), parent, access, isStatic, isFinal, new Symbol(parent, typeToken.getText()));
         } else {
             throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.FN, TokenType.IDENTIFIER}, token);
         }
@@ -182,7 +168,9 @@ public class Parser {
             case IF -> {
                 Token ifToken = token;
                 consume();
+                expectAndConsume(TokenType.LPAREN);
                 Expression condition = parseExpression(parent);
+                expectAndConsume(TokenType.RPAREN);
                 IStatement trueStatement = parseStatement(parent);
                 if (token.getType() == TokenType.ELSE) {
                     consume();
@@ -232,7 +220,7 @@ public class Parser {
     }
 
     private VariableDeclarationStatement parseVariableDeclaration(MemberDeclaration parent, Token typeToken, Token identifierToken) throws ParseException {
-        Type type = typeFromToken(parent, typeToken);
+        Symbol type = new Symbol(parent, typeToken.getText());
         Symbol identifier = new Symbol(parent, identifierToken.getText());
 
         if (token.getType() == TokenType.SEMICOLON) {
@@ -466,15 +454,6 @@ public class Parser {
     private Token consumeMaybeEof() {
         token = lexer.getNextToken();
         return token;
-    }
-
-    private Type typeFromToken(Declaration declaration, Token token) throws ParseException {
-        Optional<Type> optionalType = ReturnType.typeFromToken(token, declaration);
-        if (optionalType.isEmpty()) {
-            throw new ParseException(token.getBeginLocation(), "Expected primitive or identifier");
-        } else {
-            return optionalType.get();
-        }
     }
 
 }

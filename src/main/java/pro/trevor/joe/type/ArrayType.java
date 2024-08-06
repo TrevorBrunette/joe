@@ -1,4 +1,4 @@
-package pro.trevor.joe.tree.expression.type;
+package pro.trevor.joe.type;
 
 public class ArrayType extends Type {
 

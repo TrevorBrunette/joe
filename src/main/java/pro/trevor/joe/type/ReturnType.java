@@ -1,9 +1,6 @@
-package pro.trevor.joe.tree.expression.type;
+package pro.trevor.joe.type;
 
-import pro.trevor.joe.lexer.Token;
 import pro.trevor.joe.lexer.TokenType;
-import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.tree.declaration.Declaration;
 
 import java.util.Optional;
 
@@ -75,19 +72,6 @@ public enum ReturnType {
             case IDENTIFIER -> OBJECT;
             default -> null;
         });
-    }
-
-    public static Optional<Type> typeFromToken(Token token, Declaration parent) {
-        Optional<ReturnType> optionalReturnType = returnTypeFromToken(token.getType());
-        if (optionalReturnType.isEmpty()) {
-            return Optional.empty();
-        }
-        ReturnType returnType = optionalReturnType.get();
-        if (returnType == OBJECT) {
-            return Optional.of(new ClassType(new Symbol(parent, token.getText())));
-        } else {
-            return Optional.of(new Type(returnType));
-        }
     }
 
     public static ReturnType highest(ReturnType left, ReturnType right) {

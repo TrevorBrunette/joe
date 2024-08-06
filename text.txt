@@ -1,5 +1,7 @@
 public class Main {
-    public class Subclass {}
+    public class Subclass {
+        protected u32 myInt;
+    }
     fn main() void {
         i32 i = 6;
         if (i <= 10){

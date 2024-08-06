@@ -2,15 +2,20 @@ package pro.trevor.joe.tree.declaration;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.tree.expression.type.Type;
 
 public class ParameterDeclaration extends Declaration {
 
+    private final Symbol type;
     private final int number;
 
-    public ParameterDeclaration(Location location, Type type, Symbol identifier, Declaration parent, int number) {
-        super(location, type, identifier, parent);
+    public ParameterDeclaration(Location location, Symbol type, Symbol identifier, Declaration parent, int number) {
+        super(location, identifier, parent);
+        this.type = type;
         this.number = number;
+    }
+
+    public Symbol getType() {
+        return type;
     }
 
     public int getNumber() {

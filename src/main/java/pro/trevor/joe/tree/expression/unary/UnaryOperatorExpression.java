@@ -2,7 +2,6 @@ package pro.trevor.joe.tree.expression.unary;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.expression.Expression;
-import pro.trevor.joe.tree.expression.type.Type;
 
 public abstract class UnaryOperatorExpression extends Expression {
 
