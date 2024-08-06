@@ -212,6 +212,7 @@ public class Parser {
                     } else {
                         // Expression
                         statement = new ExpressionStatement(first.getBeginLocation(), parseExpression(parent, first));
+                        expectAndConsume(TokenType.SEMICOLON);
                     }
                 }
             }
@@ -247,70 +248,84 @@ public class Parser {
         Expression result = parsePrimaryExpression(parent, first);
         Token operation = token;
 
-        if (!operation.getType().isBinaryOperator()) {
-            return result;
-        }
+        if (operation.getType().isBinaryOperator()) {
+            consume();
+            Expression rightExpression = parseExpression(parent);
 
-        consume();
-        Expression rightExpression = parseExpression(parent);
-
-        switch (operation.getType()) {
-            case PERIOD -> {
-                result = new VariableAccessExpression(result.location(), result, rightExpression);
+            switch (operation.getType()) {
+                case PERIOD -> {
+                    result = new VariableAccessExpression(result.location(), result, rightExpression);
+                }
+                case MUL -> {
+                    result = new MultiplyExpression(result.location(), result, rightExpression);
+                }
+                case DIV -> {
+                    result = new DivideExpression(result.location(), result, rightExpression);
+                }
+                case MOD -> {
+                    result = new ModuloExpression(result.location(), result, rightExpression);
+                }
+                case SHIFT_LEFT -> {
+                    result = new ShiftLeftExpression(result.location(), result, rightExpression);
+                }
+                case SHIFT_RIGHT -> {
+                    result = new ShiftRightExpression(result.location(), result, rightExpression);
+                }
+                case SHIFT_RIGHT_LOGICAL -> {
+                    result = new ShiftRightLogicalExpression(result.location(), result, rightExpression);
+                }
+                case LESS_THAN -> {
+                    result = new LessThanExpression(result.location(), result, rightExpression);
+                }
+                case LESS_EQUAL -> {
+                    result = new LessThanOrEqualsExpression(result.location(), result, rightExpression);
+                }
+                case GREATER_THAN -> {
+                    result = new GreaterThanExpression(result.location(), result, rightExpression);
+                }
+                case GREATER_EQUAL -> {
+                    result = new GreaterThanOrEqualsExpression(result.location(), result, rightExpression);
+                }
+                case EQUALS -> {
+                    result = new EqualsExpression(result.location(), result, rightExpression);
+                }
+                case NOT_EQUALS -> {
+                    result = new NotEqualsExpression(result.location(), result, rightExpression);
+                }
+                case BAND -> {
+                    result = new BinaryAndExpression(result.location(), result, rightExpression);
+                }
+                case XOR -> {
+                    result = new BinaryXorExpression(result.location(), result, rightExpression);
+                }
+                case BOR -> {
+                    result = new BinaryOrExpression(result.location(), result, rightExpression);
+                }
+                case LAND -> {
+                    result = new LogicalAndExpression(result.location(), result, rightExpression);
+                }
+                case LOR -> {
+                    result = new LogicalOrExpression(result.location(), result, rightExpression);
+                }
+                case ASSIGN -> {
+                    result = new AssignmentExpression(result.location(), result, rightExpression);
+                }
             }
-            case MUL -> {
-                result = new MultiplyExpression(result.location(), result, rightExpression);
-            }
-            case DIV -> {
-                result = new DivideExpression(result.location(), result, rightExpression);
-            }
-            case MOD -> {
-                result = new ModuloExpression(result.location(), result, rightExpression);
-            }
-            case SHIFT_LEFT -> {
-                result = new ShiftLeftExpression(result.location(), result, rightExpression);
-            }
-            case SHIFT_RIGHT -> {
-                result = new ShiftRightExpression(result.location(), result, rightExpression);
-            }
-            case SHIFT_RIGHT_LOGICAL -> {
-                result = new ShiftRightLogicalExpression(result.location(), result, rightExpression);
-            }
-            case LESS_THAN -> {
-                result = new LessThanExpression(result.location(), result, rightExpression);
-            }
-            case LESS_EQUAL -> {
-                result = new LessThanOrEqualsExpression(result.location(), result, rightExpression);
-            }
-            case GREATER_THAN -> {
-                result = new GreaterThanExpression(result.location(), result, rightExpression);
-            }
-            case GREATER_EQUAL -> {
-                result = new GreaterThanOrEqualsExpression(result.location(), result, rightExpression);
-            }
-            case EQUALS -> {
-                result = new EqualsExpression(result.location(), result, rightExpression);
-            }
-            case NOT_EQUALS -> {
-                result = new NotEqualsExpression(result.location(), result, rightExpression);
-            }
-            case BAND -> {
-                result = new BinaryAndExpression(result.location(), result, rightExpression);
-            }
-            case XOR -> {
-                result = new BinaryXorExpression(result.location(), result, rightExpression);
-            }
-            case BOR -> {
-                result = new BinaryOrExpression(result.location(), result, rightExpression);
-            }
-            case LAND -> {
-                result = new LogicalAndExpression(result.location(), result, rightExpression);
-            }
-            case LOR -> {
-                result = new LogicalOrExpression(result.location(), result, rightExpression);
-            }
-            case ASSIGN -> {
-                result = new AssignmentExpression(result.location(), result, rightExpression);
+        } else if (operation.getType().isPostfixOperator()) {
+            consume();
+            switch (operation.getType()) {
+                case LPAREN -> {
+                    List<Expression> parameters = new ArrayList<>();
+                    if (token.getType() != TokenType.RPAREN) {
+                        parameters.add(parseExpression(parent));
+                        while (token.getType() == TokenType.COMMA) {
+                            consume();
+                            parameters.add(parseExpression(parent));
+                        }
+                    }
+                    expectAndConsume(TokenType.RPAREN);
+                    result = new MethodInvocationExpression(first.getBeginLocation(), result, parameters);
+                }
             }
         }
 
@@ -363,18 +378,7 @@ public class Parser {
                 expression = new IntegerExpression(first.getBeginLocation(), first.getText());
             }
             case IDENTIFIER -> {
-                if (first.getType() == TokenType.LPAREN) {
-                    List<Expression> parameters = new ArrayList<>();
-                    parameters.add(parseExpression(parent));
-                    while (token.getType() == TokenType.COMMA) {
-                        consume();
-                        parameters.add(parseExpression(parent));
-                    }
-                    expectAndConsume(TokenType.RPAREN);
-                    expression = new MethodInvocationExpression(first.getBeginLocation(), new Symbol(parent, first.getText()), parameters);
-                } else {
-                    expression = new VariableExpression(first.getBeginLocation(), new Symbol(parent, first.getText()));
-                }
+                expression = new VariableExpression(first.getBeginLocation(), new Symbol(parent, first.getText()));
             }
             default -> throw new ParseException(first.getBeginLocation(), String.format("Unexpected start of expression '%s'", first.getText()));
         }

@@ -350,7 +350,8 @@ public class PrintVisitor implements IVisitor {
 
     @Override
     public void visit(MethodInvocationExpression methodInvocationExpression) {
-        sb.append(methodInvocationExpression.getMethod()).append("(");
+        visit(methodInvocationExpression.getMethod());
+        sb.append("(");
         List<Expression> parameters = methodInvocationExpression.getParameters();
         if (!parameters.isEmpty()) {
             visit(parameters.getFirst());

@@ -125,12 +125,14 @@ public enum TokenType {
     };
     private static final TokenType[] BINARY_OPERATORS = {
             PERIOD, MUL, DIV, MOD, SHIFT_LEFT, SHIFT_RIGHT, SHIFT_RIGHT_LOGICAL, LESS_THAN, LESS_EQUAL, GREATER_THAN,
-            GREATER_EQUAL, EQUALS, NOT_EQUALS, BAND, XOR, BOR, LAND, LOR, ASSIGN,
+            GREATER_EQUAL, EQUALS, NOT_EQUALS, BAND, XOR, BOR, LAND, LOR, ASSIGN
     };
+    private static final TokenType[] POSTFIX_OPERATORS = {LPAREN};
 
     private static final Set<TokenType> PRIMITIVES_SET = Set.of(PRIMITIVES);
     private static final Set<TokenType> KEYWORDS_SET = Set.of(KEYWORDS);
     private static final Set<TokenType> BINARY_OPERATORS_SET = Set.of(BINARY_OPERATORS);
+    private static final Set<TokenType> POSTFIX_OPERATORS_SET = Set.of(POSTFIX_OPERATORS);
 
     private final String text;
 
@@ -160,6 +162,10 @@ public enum TokenType {
 
     public boolean isBinaryOperator() {
         return BINARY_OPERATORS_SET.contains(this);
+    }
+
+    public boolean isPostfixOperator() {
+        return POSTFIX_OPERATORS_SET.contains(this);
     }
 
 }

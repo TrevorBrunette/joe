@@ -1,22 +1,21 @@
 package pro.trevor.joe.tree.expression;
 
 import pro.trevor.joe.lexer.Location;
-import pro.trevor.joe.tree.Symbol;
 
 import java.util.List;
 
 public class MethodInvocationExpression extends Expression {
 
-    private final Symbol method;
+    private final Expression method;
     private final List<Expression> parameters;
 
-    public MethodInvocationExpression(Location location, Symbol method, List<Expression> parameters) {
+    public MethodInvocationExpression(Location location, Expression method, List<Expression> parameters) {
         super(location);
         this.method = method;
         this.parameters = parameters;
     }
 
-    public Symbol getMethod() {
+    public Expression getMethod() {
         return method;
     }
 

@@ -360,6 +360,7 @@ public class Lexer {
                 ++line;
                 character = 1;
             } else {
+                previousLine = line;
                 previousCharacter = character;
                 ++character;
             }
