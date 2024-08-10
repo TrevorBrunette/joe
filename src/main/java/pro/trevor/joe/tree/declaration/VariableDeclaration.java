@@ -3,12 +3,12 @@ package pro.trevor.joe.tree.declaration;
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.Symbol;
 
-public class VariableDeclaration extends MemberDeclaration {
+public class VariableDeclaration extends AccessDeclaration implements ClassMember {
 
     private Symbol type;
 
-    public VariableDeclaration(Location location, Symbol identifier, ClassDeclaration classDeclaration, Access access, boolean isStatic, boolean isFinal, Symbol type) {
-        super(location, identifier, classDeclaration, access, isStatic, isFinal);
+    public VariableDeclaration(Location location, Symbol identifier, TypeDeclaration typeDeclaration, Access access, boolean isStatic, boolean isFinal, Symbol type) {
+        super(location, identifier, typeDeclaration, access, isStatic, isFinal);
         this.type = type;
     }
 

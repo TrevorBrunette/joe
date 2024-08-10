@@ -13,7 +13,7 @@ public class Main {
 
     public static void main(String[] args) throws ParseException {
         String text = "";
-        try (FileInputStream fis = new FileInputStream("text.txt")) {
+        try (FileInputStream fis = new FileInputStream("text.joe")) {
             text = new String(fis.readAllBytes());
         } catch (IOException ignored) {}
         Lexer lexer = new Lexer(text);

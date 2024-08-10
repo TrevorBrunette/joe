@@ -124,10 +124,10 @@ public enum TokenType {
             RETURN, STATIC, SUPER, SWITCH, THIS, TRUE, TRY, VAR, VOID, WHILE
     };
     private static final TokenType[] BINARY_OPERATORS = {
-            PERIOD, MUL, DIV, MOD, SHIFT_LEFT, SHIFT_RIGHT, SHIFT_RIGHT_LOGICAL, LESS_THAN, LESS_EQUAL, GREATER_THAN,
+            PERIOD, MUL, DIV, MOD, ADD, SUB, SHIFT_LEFT, SHIFT_RIGHT, SHIFT_RIGHT_LOGICAL, LESS_THAN, LESS_EQUAL, GREATER_THAN,
             GREATER_EQUAL, EQUALS, NOT_EQUALS, BAND, XOR, BOR, LAND, LOR, ASSIGN
     };
-    private static final TokenType[] POSTFIX_OPERATORS = {LPAREN};
+    private static final TokenType[] POSTFIX_OPERATORS = {LPAREN, LBRACKET};
 
     private static final Set<TokenType> PRIMITIVES_SET = Set.of(PRIMITIVES);
     private static final Set<TokenType> KEYWORDS_SET = Set.of(KEYWORDS);

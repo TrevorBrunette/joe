@@ -14,8 +14,6 @@ import pro.trevor.joe.tree.expression.literal.CharExpression;
 import pro.trevor.joe.tree.expression.literal.FloatExpression;
 import pro.trevor.joe.tree.expression.literal.IntegerExpression;
 import pro.trevor.joe.tree.expression.literal.StringExpression;
-import pro.trevor.joe.type.ReturnType;
-import pro.trevor.joe.type.Type;
 import pro.trevor.joe.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.tree.statement.*;
@@ -40,7 +38,7 @@ public class Parser {
 
 
     /*
-     * [public|private|protected] [static] [final] class $identifier { MemberDeclaration* }
+     * [public|private|protected] [static] [final] class|enum|interface $identifier { MemberDeclaration* }
      */
     public ClassDeclaration parseClass(ClassDeclaration parent) throws ParseException {
 
@@ -52,9 +50,9 @@ public class Parser {
     }
 
     /*
-     * class $identifier { MemberDeclaration* }
+     * class|enum|interface $identifier { MemberDeclaration* }
      */
-    private ClassDeclaration parseClass(ClassDeclaration parent, Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private ClassDeclaration parseClass(TypeDeclaration parent, Access access, boolean isStatic, boolean isFinal) throws ParseException {
         Token classToken = expectAndConsume(TokenType.CLASS);
         Token classNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
@@ -63,7 +61,7 @@ public class Parser {
         expectAndConsume(TokenType.LBRACE);
 
         while (token.getType() != TokenType.RBRACE) {
-            classDeclaration.addMemberDeclaration(parseMemberDeclaration(classDeclaration));
+            classDeclaration.addMemberDeclaration((ClassMember) parseTypeMemberDeclaration(classDeclaration));
         }
 
         expectAndConsumeMaybeEof(TokenType.RBRACE);
@@ -76,21 +74,21 @@ public class Parser {
      *   [static]
      *   [final]
      *   (
-     *     class $identifier { MemberDeclaration* } |
+     *     class|enum|interface $identifier { MemberDeclaration* } |
      *     fn $identifier([ParameterDeclaration (, ParameterDeclaration)*]) $type { Statement* } |
      *     $type $identifier;
      *   )
      * *)
      *
      */
-    private MemberDeclaration parseMemberDeclaration(ClassDeclaration parent) throws ParseException {
+    private TypeMember parseTypeMemberDeclaration(TypeDeclaration parent) throws ParseException {
         Access access = consumeAccessIfPresent();
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
 
-        MemberDeclaration declaration;
+        TypeMember declaration;
 
-        if (token.getType() == TokenType.CLASS) {
+        if (token.getType() == TokenType.CLASS || token.getType() == TokenType.ENUM || token.getType() == TokenType.INTERFACE) {
             // Inner class declaration
             declaration = parseClass(parent, access, isStatic, isFinal);
         } else if (token.getType() == TokenType.FN) {
@@ -99,7 +97,7 @@ public class Parser {
             consume();
             Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
 
-            FunctionDeclaration functionDeclaration = new FunctionDeclaration(beginning, new Symbol(parent, identifierToken.getText()), parent, isStatic, isFinal, null, new ArrayList<>(), null);
+            FunctionDeclaration functionDeclaration = new FunctionDeclaration(beginning, new Symbol(parent, identifierToken.getText()), parent, access, isStatic, isFinal, null, new ArrayList<>(), null);
 
             expectAndConsume(TokenType.LPAREN);
             int number = 0;
@@ -143,7 +141,7 @@ public class Parser {
         return declaration;
     }
 
-    private Block parseCodeBlock(MemberDeclaration parent) throws ParseException {
+    private Block parseCodeBlock(TypeDeclaration parent) throws ParseException {
         Block block = new Block(token.getBeginLocation());
 
         expectAndConsume(TokenType.LBRACE);
@@ -155,7 +153,7 @@ public class Parser {
         return block;
     }
 
-    private IStatement parseStatement(MemberDeclaration parent) throws ParseException {
+    private IStatement parseStatement(TypeDeclaration parent) throws ParseException {
         IStatement statement;
         switch (token.getType()) {
             case LBRACE -> {
@@ -220,7 +218,7 @@ public class Parser {
         return statement;
     }
 
-    private VariableDeclarationStatement parseVariableDeclaration(MemberDeclaration parent, Token typeToken, Token identifierToken) throws ParseException {
+    private VariableDeclarationStatement parseVariableDeclaration(TypeDeclaration parent, Token typeToken, Token identifierToken) throws ParseException {
         Symbol type = new Symbol(parent, typeToken.getText());
         Symbol identifier = new Symbol(parent, identifierToken.getText());
 
@@ -238,107 +236,134 @@ public class Parser {
         }
     }
 
-    private Expression parseExpression(MemberDeclaration parent) throws ParseException {
+    private Expression parseExpression(TypeDeclaration parent) throws ParseException {
         Token old = token;
         consume();
-        return parseExpression(parent, old);
+        return parseExpression(parent, old, Integer.MIN_VALUE);
     }
 
-    private Expression parseExpression(MemberDeclaration parent, Token first) throws ParseException {
-        Expression result = parsePrimaryExpression(parent, first);
+    private Expression parseExpression(TypeDeclaration parent, int precedence) throws ParseException {
+        Token old = token;
+        consume();
+        return parseExpression(parent, old, precedence);
+    }
+
+    private Expression parseExpression(TypeDeclaration parent, Token first) throws ParseException {
+        return parseExpression(parent, first, Integer.MIN_VALUE);
+    }
+
+    private Expression parseExpression(TypeDeclaration parent, Token first, int precedence) throws ParseException {
+        Expression output = parsePrimaryExpression(parent, first);
         Token operation = token;
 
-        if (operation.getType().isBinaryOperator()) {
-            consume();
-            Expression rightExpression = parseExpression(parent);
+        while (operation.getType().isBinaryOperator() || operation.getType().isPostfixOperator()) {
+            if (operation.getType().isBinaryOperator()) {
+                int tokenPrecedence = precedence(token.getType());
+                boolean lowerPrecedence = tokenPrecedence < precedence || (associativity(token.getType()) == Associativity.LEFT_TO_RIGHT && tokenPrecedence == precedence);
+                if (lowerPrecedence) {
+                    break;
+                }
+                consume();
+                Expression rightExpression = parseExpression(parent, precedence(operation.getType()));
 
-            switch (operation.getType()) {
-                case PERIOD -> {
-                    result = new VariableAccessExpression(result.location(), result, rightExpression);
-                }
-                case MUL -> {
-                    result = new MultiplyExpression(result.location(), result, rightExpression);
-                }
-                case DIV -> {
-                    result = new DivideExpression(result.location(), result, rightExpression);
-                }
-                case MOD -> {
-                    result = new ModuloExpression(result.location(), result, rightExpression);
-                }
-                case SHIFT_LEFT -> {
-                    result = new ShiftLeftExpression(result.location(), result, rightExpression);
-                }
-                case SHIFT_RIGHT -> {
-                    result = new ShiftRightExpression(result.location(), result, rightExpression);
-                }
-                case SHIFT_RIGHT_LOGICAL -> {
-                    result = new ShiftRightLogicalExpression(result.location(), result, rightExpression);
-                }
-                case LESS_THAN -> {
-                    result = new LessThanExpression(result.location(), result, rightExpression);
-                }
-                case LESS_EQUAL -> {
-                    result = new LessThanOrEqualsExpression(result.location(), result, rightExpression);
-                }
-                case GREATER_THAN -> {
-                    result = new GreaterThanExpression(result.location(), result, rightExpression);
-                }
-                case GREATER_EQUAL -> {
-                    result = new GreaterThanOrEqualsExpression(result.location(), result, rightExpression);
-                }
-                case EQUALS -> {
-                    result = new EqualsExpression(result.location(), result, rightExpression);
-                }
-                case NOT_EQUALS -> {
-                    result = new NotEqualsExpression(result.location(), result, rightExpression);
-                }
-                case BAND -> {
-                    result = new BinaryAndExpression(result.location(), result, rightExpression);
-                }
-                case XOR -> {
-                    result = new BinaryXorExpression(result.location(), result, rightExpression);
-                }
-                case BOR -> {
-                    result = new BinaryOrExpression(result.location(), result, rightExpression);
-                }
-                case LAND -> {
-                    result = new LogicalAndExpression(result.location(), result, rightExpression);
-                }
-                case LOR -> {
-                    result = new LogicalOrExpression(result.location(), result, rightExpression);
-                }
-                case ASSIGN -> {
-                    result = new AssignmentExpression(result.location(), result, rightExpression);
-                }
-            }
-        } else if (operation.getType().isPostfixOperator()) {
-            consume();
-            switch (operation.getType()) {
-                case LPAREN -> {
-                    List<Expression> parameters = new ArrayList<>();
-                    if (token.getType() != TokenType.RPAREN) {
-                        parameters.add(parseExpression(parent));
-                        while (token.getType() == TokenType.COMMA) {
-                            consume();
-                            parameters.add(parseExpression(parent));
-                        }
+                switch (operation.getType()) {
+                    case PERIOD -> {
+                        output = new VariableAccessExpression(output.location(), output, rightExpression);
                     }
-                    expectAndConsume(TokenType.RPAREN);
-                    result = new MethodInvocationExpression(first.getBeginLocation(), result, parameters);
+                    case MUL -> {
+                        output = new MultiplyExpression(output.location(), output, rightExpression);
+                    }
+                    case DIV -> {
+                        output = new DivideExpression(output.location(), output, rightExpression);
+                    }
+                    case MOD -> {
+                        output = new ModuloExpression(output.location(), output, rightExpression);
+                    }
+                    case ADD -> {
+                        output = new AdditionExpression(output.location(), output, rightExpression);
+                    }
+                    case SUB -> {
+                        output = new SubtractionExpression(output.location(), output, rightExpression);
+                    }
+                    case SHIFT_LEFT -> {
+                        output = new ShiftLeftExpression(output.location(), output, rightExpression);
+                    }
+                    case SHIFT_RIGHT -> {
+                        output = new ShiftRightExpression(output.location(), output, rightExpression);
+                    }
+                    case SHIFT_RIGHT_LOGICAL -> {
+                        output = new ShiftRightLogicalExpression(output.location(), output, rightExpression);
+                    }
+                    case LESS_THAN -> {
+                        output = new LessThanExpression(output.location(), output, rightExpression);
+                    }
+                    case LESS_EQUAL -> {
+                        output = new LessThanOrEqualsExpression(output.location(), output, rightExpression);
+                    }
+                    case GREATER_THAN -> {
+                        output = new GreaterThanExpression(output.location(), output, rightExpression);
+                    }
+                    case GREATER_EQUAL -> {
+                        output = new GreaterThanOrEqualsExpression(output.location(), output, rightExpression);
+                    }
+                    case EQUALS -> {
+                        output = new EqualsExpression(output.location(), output, rightExpression);
+                    }
+                    case NOT_EQUALS -> {
+                        output = new NotEqualsExpression(output.location(), output, rightExpression);
+                    }
+                    case BAND -> {
+                        output = new BinaryAndExpression(output.location(), output, rightExpression);
+                    }
+                    case XOR -> {
+                        output = new BinaryXorExpression(output.location(), output, rightExpression);
+                    }
+                    case BOR -> {
+                        output = new BinaryOrExpression(output.location(), output, rightExpression);
+                    }
+                    case LAND -> {
+                        output = new LogicalAndExpression(output.location(), output, rightExpression);
+                    }
+                    case LOR -> {
+                        output = new LogicalOrExpression(output.location(), output, rightExpression);
+                    }
+                    case ASSIGN -> {
+                        output = new AssignmentExpression(output.location(), output, rightExpression);
+                    }
+                    default -> throw new ParseException(operation.getBeginLocation(), "Unhandled binary operator " + operation.getText());
                 }
+            } else if (operation.getType().isPostfixOperator()) {
+                consume();
+                switch (operation.getType()) {
+                    case LPAREN -> {
+                        List<Expression> parameters = new ArrayList<>();
+                        if (token.getType() != TokenType.RPAREN) {
+                            parameters.add(parseExpression(parent));
+                            while (token.getType() == TokenType.COMMA) {
+                                consume();
+                                parameters.add(parseExpression(parent));
+                            }
+                        }
+                        expectAndConsume(TokenType.RPAREN);
+                        output = new MethodInvocationExpression(first.getBeginLocation(), output, parameters);
+                    }
+                    case LBRACKET -> {
+                        output = new ArrayIndexExpression(operation.getBeginLocation(), output, parseExpression(parent));
+                        expectAndConsume(TokenType.RBRACKET);
+                    }
+                    default ->
+                            throw new ParseException(operation.getBeginLocation(), "Unhandled postfix operator " + operation.getText());
+                }
+            } else {
+                throw new ParseException(token.getBeginLocation(), "Unexpected internal state");
             }
+            operation = token;
         }
 
-        return result;
+        return output;
     }
 
-    private Expression parsePrimaryExpression(MemberDeclaration parent) throws ParseException {
-        Token old = token;
-        consume();
-        return parsePrimaryExpression(parent, old);
-    }
-
-    private Expression parsePrimaryExpression(MemberDeclaration parent, Token first) throws ParseException {
+    private Expression parsePrimaryExpression(TypeDeclaration parent, Token first) throws ParseException {
         Expression expression;
         switch (first.getType()) {
             case LNOT -> {
@@ -458,6 +483,31 @@ public class Parser {
     private Token consumeMaybeEof() {
         token = lexer.getNextToken();
         return token;
+    }
+
+    private static int precedence(TokenType tokenType) {
+        return switch (tokenType) {
+            case ASSIGN -> 1;
+            case LOR -> 2;
+            case LAND -> 3;
+            case BOR -> 4;
+            case XOR -> 5;
+            case BAND -> 6;
+            case EQUALS, NOT_EQUALS -> 7;
+            case LESS_THAN, LESS_EQUAL, GREATER_THAN, GREATER_EQUAL -> 8;
+            case SHIFT_LEFT, SHIFT_RIGHT, SHIFT_RIGHT_LOGICAL -> 9;
+            case ADD, SUB -> 10;
+            case MUL, DIV, MOD -> 11;
+            case PERIOD -> 12;
+            default -> -1;
+        };
+    }
+
+    private static Associativity associativity(TokenType tokenType) {
+        return switch (tokenType) {
+            case ASSIGN -> Associativity.RIGHT_TO_LEFT;
+            default -> Associativity.LEFT_TO_RIGHT;
+        };
     }
 
 }

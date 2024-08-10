@@ -13,14 +13,26 @@ public interface IVisitor {
         switch (declaration) {
             case ClassDeclaration x -> visit(x);
             case FunctionDeclaration x -> visit(x);
+            case FunctionStubDeclaration x -> visit(x);
+            case InterfaceDeclaration x -> visit(x);
             case ParameterDeclaration x -> visit(x);
             case VariableDeclaration x -> visit(x);
             default -> throw new Error("Unhandled visiting of " + declaration.getClass().getSimpleName());
         }
     }
 
+    default void visit(TypeMember typeMember) {
+        if (typeMember instanceof Declaration declaration) {
+            visit(declaration);
+        } else {
+            throw new Error("Unhandled visiting of " + typeMember.getClass().getSimpleName());
+        }
+    }
+
     void visit(ClassDeclaration classDeclaration);
     void visit(FunctionDeclaration functionDeclaration);
+    void visit(FunctionStubDeclaration functionStubDeclaration);
+    void visit(InterfaceDeclaration interfaceDeclaration);
     void visit(VariableDeclaration variableDeclaration);
     void visit(ParameterDeclaration parameterDeclaration);
 

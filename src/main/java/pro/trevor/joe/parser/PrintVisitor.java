@@ -40,7 +40,7 @@ public class PrintVisitor implements IVisitor {
         sb.append("class ").append(classDeclaration.getIdentifier().getName()).append('\n');
         printWithIndent("{");
         ++indentFactor;
-        for (MemberDeclaration declaration : classDeclaration.getMemberDeclarations()) {
+        for (ClassMember declaration : classDeclaration.getTypeMembers()) {
             sb.append("\n");
             visit(declaration);
         }
@@ -59,6 +59,22 @@ public class PrintVisitor implements IVisitor {
         }
         sb.append(") ").append(functionDeclaration.getReturnType().toString()).append(' ');
         visit(functionDeclaration.getCode());
+    }
+
+    @Override
+    public void visit(FunctionStubDeclaration functionStubDeclaration) {
+        printWithIndent(functionStubDeclaration.getAccess().name().toLowerCase());
+        sb.append(' ').append(functionStubDeclaration.getIdentifier().getName()).append('(');
+        for (ParameterDeclaration x : functionStubDeclaration.getArguments()) {
+            visit(x);
+            sb.append(", ");
+        }
+        sb.append(") ").append(functionStubDeclaration.getReturnType().toString()).append(';');
+    }
+
+    @Override
+    public void visit(InterfaceDeclaration interfaceDeclaration) {
+        throw new Error("Stubbed function for " + interfaceDeclaration.getClass().getName());
     }
 
     @Override
@@ -178,169 +194,217 @@ public class PrintVisitor implements IVisitor {
 
     @Override
     public void visit(AdditionExpression additionExpression) {
+        sb.append('(');
         visit(additionExpression.getLeftOperand());
         sb.append(" + ");
         visit(additionExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(AssignmentExpression assignmentExpression) {
+        sb.append('(');
         visit(assignmentExpression.getLeftOperand());
         sb.append(" = ");
         visit(assignmentExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(BinaryAndExpression binaryAndExpression) {
+        sb.append('(');
         visit(binaryAndExpression.getLeftOperand());
         sb.append(" & ");
         visit(binaryAndExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(BinaryInvertExpression binaryInvertExpression) {
         sb.append('~');
+        sb.append('(');
         visit(binaryInvertExpression.getOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(BinaryOrExpression binaryOrExpression) {
+        sb.append('(');
         visit(binaryOrExpression.getLeftOperand());
         sb.append(" | ");
         visit(binaryOrExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(BinaryXorExpression binaryXorExpression) {
+        sb.append('(');
         visit(binaryXorExpression.getLeftOperand());
         sb.append(" ^ ");
         visit(binaryXorExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(DivideExpression divideExpression) {
+        sb.append('(');
         visit(divideExpression.getLeftOperand());
         sb.append(" / ");
         visit(divideExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(EqualsExpression equalsExpression) {
+        sb.append('(');
         visit(equalsExpression.getLeftOperand());
         sb.append(" == ");
         visit(equalsExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(GreaterThanExpression greaterThanExpression) {
+        sb.append('(');
         visit(greaterThanExpression.getLeftOperand());
         sb.append(" > ");
         visit(greaterThanExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(GreaterThanOrEqualsExpression greaterThanOrEqualsExpression) {
+        sb.append('(');
         visit(greaterThanOrEqualsExpression.getLeftOperand());
         sb.append(" >= ");
         visit(greaterThanOrEqualsExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(LessThanExpression lessThanExpression) {
+        sb.append('(');
         visit(lessThanExpression.getLeftOperand());
         sb.append(" < ");
         visit(lessThanExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(LessThanOrEqualsExpression lessThanOrEqualsExpression) {
+        sb.append('(');
         visit(lessThanOrEqualsExpression.getLeftOperand());
         sb.append(" <= ");
         visit(lessThanOrEqualsExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(LogicalAndExpression logicalAndExpression) {
+        sb.append('(');
         visit(logicalAndExpression.getLeftOperand());
         sb.append(" && ");
         visit(logicalAndExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(LogicalInvertExpression logicalInvertExpression) {
         sb.append("!");
+        sb.append('(');
         visit(logicalInvertExpression.getOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(LogicalOrExpression logicalOrExpression) {
+        sb.append('(');
         visit(logicalOrExpression.getLeftOperand());
         sb.append(" || ");
         visit(logicalOrExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(LogicalXorExpression logicalXorExpression) {
+        sb.append('(');
         visit(logicalXorExpression.getLeftOperand());
         sb.append(" ^^ ");
         visit(logicalXorExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(ModuloExpression moduloExpression) {
+        sb.append('(');
         visit(moduloExpression.getLeftOperand());
         sb.append(" % ");
         visit(moduloExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(MultiplyExpression multiplyExpression) {
+        sb.append('(');
         visit(multiplyExpression.getLeftOperand());
         sb.append(" * ");
         visit(multiplyExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(NotEqualsExpression notEqualsExpression) {
+        sb.append('(');
         visit(notEqualsExpression.getLeftOperand());
         sb.append(" != ");
         visit(notEqualsExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(ShiftLeftExpression shiftLeftExpression) {
+        sb.append('(');
         visit(shiftLeftExpression.getLeftOperand());
         sb.append(" << ");
         visit(shiftLeftExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(ShiftRightExpression shiftRightExpression) {
+        sb.append('(');
         visit(shiftRightExpression.getLeftOperand());
         sb.append(" >> ");
         visit(shiftRightExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(ShiftRightLogicalExpression shiftRightLogicalExpression) {
+        sb.append('(');
         visit(shiftRightLogicalExpression.getLeftOperand());
         sb.append(" >>> ");
         visit(shiftRightLogicalExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(SubtractionExpression subtractionExpression) {
+        sb.append('(');
         visit(subtractionExpression.getLeftOperand());
         sb.append(" - ");
         visit(subtractionExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override
     public void visit(ArrayIndexExpression arrayIndexExpression) {
+        sb.append('(');
         visit(arrayIndexExpression.getArray());
         sb.append('[');
         visit(arrayIndexExpression.getIndex());
         sb.append(']');
+        sb.append(')');
     }
 
     @Override
@@ -350,6 +414,7 @@ public class PrintVisitor implements IVisitor {
 
     @Override
     public void visit(MethodInvocationExpression methodInvocationExpression) {
+        sb.append('(');
         visit(methodInvocationExpression.getMethod());
         sb.append("(");
         List<Expression> parameters = methodInvocationExpression.getParameters();
@@ -361,10 +426,12 @@ public class PrintVisitor implements IVisitor {
             }
         }
         sb.append(')');
+        sb.append(')');
     }
 
     @Override
     public void visit(ObjectInstantiationExpression objectInstantiationExpression) {
+        sb.append('(');
         sb.append("new ").append(objectInstantiationExpression.getType().toString()).append("(");
         List<Expression> parameters = objectInstantiationExpression.getParameters();
         if (!parameters.isEmpty()) {
@@ -375,13 +442,16 @@ public class PrintVisitor implements IVisitor {
             }
         }
         sb.append(')');
+        sb.append(')');
     }
 
     @Override
     public void visit(VariableAccessExpression variableAccessExpression) {
+        sb.append('(');
         visit(variableAccessExpression.getLeftOperand());
         sb.append('.');
         visit(variableAccessExpression.getRightOperand());
+        sb.append(')');
     }
 
     @Override

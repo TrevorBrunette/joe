@@ -1,11 +1,13 @@
 public class Main {
-    public class Subclass {
+    public class InnerClass {
         protected u32 myInt;
     }
     fn main() void {
+        i32 j = 1 + 1 + 2 + 3 + 5;
         i32 i = 6;
-        if (i <= 10){
-            i = 0;
+
+        if (i <= 8 + 2 * 3){
+            i = j = 0;
         }
         // hello comment
         /*
@@ -15,7 +17,7 @@ public class Main {
          * comment
          */
         if (i != /*comment*/ 0) {
-            System.out.println("/**/abc:?()");
+            System.out.println("/* not a comment */abc:?()");
         }
     }
 }

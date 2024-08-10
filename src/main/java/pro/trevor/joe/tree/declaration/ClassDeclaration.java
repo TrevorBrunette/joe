@@ -6,13 +6,13 @@ import pro.trevor.joe.tree.Symbol;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassDeclaration extends MemberDeclaration {
+public class ClassDeclaration extends TypeDeclaration implements ClassMember, EnumMember, InterfaceMember {
 
-    private final List<MemberDeclaration> memberDeclarations;
+    private final List<ClassMember> typeMembers;
 
-    public ClassDeclaration(Location location, Symbol symbol, ClassDeclaration classDeclaration, Access access, boolean isStatic, boolean isFinal) {
-        super(location, symbol, classDeclaration, access, isStatic, isFinal);
-        this.memberDeclarations = new ArrayList<>();
+    public ClassDeclaration(Location location, Symbol symbol, TypeDeclaration typeDeclaration, Access access, boolean isStatic, boolean isFinal) {
+        super(location, symbol, typeDeclaration, access, isStatic, isFinal);
+        this.typeMembers = new ArrayList<>();
     }
 
     public ClassDeclaration(Location location, Symbol symbol, ClassDeclaration classDeclaration) {
@@ -23,11 +23,11 @@ public class ClassDeclaration extends MemberDeclaration {
         this(location, symbol, null);
     }
 
-    public void addMemberDeclaration(MemberDeclaration memberDeclaration) {
-        memberDeclarations.add(memberDeclaration);
+    public void addMemberDeclaration(ClassMember classMember) {
+        typeMembers.add(classMember);
     }
 
-    public List<MemberDeclaration> getMemberDeclarations() {
-        return memberDeclarations;
+    public List<ClassMember> getTypeMembers() {
+        return typeMembers;
     }
 }

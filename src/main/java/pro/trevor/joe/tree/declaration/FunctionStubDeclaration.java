@@ -2,22 +2,18 @@ package pro.trevor.joe.tree.declaration;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.type.Type;
-import pro.trevor.joe.tree.statement.Block;
 
 import java.util.List;
 
-public class FunctionDeclaration extends AccessDeclaration implements ClassMember, EnumMember {
+public class FunctionStubDeclaration extends AccessDeclaration implements ClassMember, EnumMember, InterfaceMember {
 
     private Symbol returnType;
     private final List<ParameterDeclaration> arguments;
-    private Block code;
 
-    public FunctionDeclaration(Location location, Symbol identifier, Declaration parent, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments, Block code) {
+    public FunctionStubDeclaration(Location location, Symbol identifier, Declaration parent, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments) {
         super(location, identifier, parent, access, isStatic, isFinal);
         this.returnType = returnType;
         this.arguments = arguments;
-        this.code = code;
     }
 
     public Symbol getReturnType() {
@@ -30,13 +26,5 @@ public class FunctionDeclaration extends AccessDeclaration implements ClassMembe
 
     public List<ParameterDeclaration> getArguments() {
         return arguments;
-    }
-
-    public void setCode(Block code) {
-        this.code = code;
-    }
-
-    public Block getCode() {
-        return code;
     }
 }
