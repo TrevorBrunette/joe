@@ -39,7 +39,7 @@ public class Parser {
      */
     public TypeDeclaration parseType() throws ParseException {
 
-        Access access = consumeAccessIfPresent();
+        Access access = consumeAccessIfPresent(Access.PRIVATE);
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
 
@@ -135,7 +135,7 @@ public class Parser {
      *
      */
     private ClassMember parseClassMember() throws ParseException {
-        Access access = consumeAccessIfPresent();
+        Access access = consumeAccessIfPresent(Access.PRIVATE);
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
 
@@ -174,7 +174,7 @@ public class Parser {
      *
      */
     private InterfaceMember parseInterfaceMember() throws ParseException {
-        Access access = consumeAccessIfPresent();
+        Access access = consumeAccessIfPresent(Access.PUBLIC);
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
 
@@ -251,15 +251,8 @@ public class Parser {
 
         List<ParameterDeclaration> parameters = parseParameterDeclarations();
 
-        Token typeToken = token;
-        Block code = new Block(token.getBeginLocation());
-
-        consume();
-        expectAndConsume(TokenType.LBRACE);
-        while (token.getType() != TokenType.RBRACE) {
-            code.addStatement(parseStatement());
-        }
-        expectAndConsume(TokenType.RBRACE);
+        Token typeToken = expectAndConsumeType();
+        expectAndConsume(TokenType.SEMICOLON);
 
         return new FunctionStubDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()), parameters);
     }
@@ -554,7 +547,7 @@ public class Parser {
         return expression;
     }
 
-    private Access consumeAccessIfPresent() throws ParseException {
+    private Access consumeAccessIfPresent(Access defaultAccess) throws ParseException {
         switch (token.getType()) {
             case PUBLIC -> {
                 consume();
@@ -569,7 +562,7 @@ public class Parser {
                 return Access.PRIVATE;
             }
             default -> {
-                return Access.PRIVATE;
+                return defaultAccess;
             }
         }
     }

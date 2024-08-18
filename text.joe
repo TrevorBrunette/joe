@@ -10,6 +10,10 @@ public class Main {
         ENUM(u32, InnerClass)
     }
 
+    private interface MyInterface {
+        fn myFunction(MyType myParam) myReturnType;
+    }
+
     fn function(u32 x, i8 y) u32 {
         return x + y;
     }

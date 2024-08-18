@@ -125,7 +125,26 @@ public class PrintVisitor implements IVisitor {
 
     @Override
     public void visit(InterfaceDeclaration interfaceDeclaration) {
-        throw new Error("Stubbed function for " + interfaceDeclaration.getClass().getName());
+        printWithIndent(interfaceDeclaration.getAccess().name().toLowerCase());
+        sb.append(' ');
+        if (interfaceDeclaration.isStatic()) {
+            sb.append("static ");
+        }
+        if (interfaceDeclaration.isFinal()) {
+            sb.append("final ");
+        }
+        sb.append("interface ").append(interfaceDeclaration.getIdentifier().getName()).append('\n');
+        printWithIndent("{");
+        ++indentFactor;
+
+        for (InterfaceMember declaration : interfaceDeclaration.getInterfaceMembers()) {
+            sb.append("\n");
+            visit(declaration);
+        }
+
+        --indentFactor;
+        sb.append('\n');
+        printWithIndent("}");
     }
 
     @Override
