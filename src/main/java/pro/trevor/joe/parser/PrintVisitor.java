@@ -2,6 +2,7 @@ package pro.trevor.joe.parser;
 
 import pro.trevor.joe.tree.IStatement;
 import pro.trevor.joe.tree.IVisitor;
+import pro.trevor.joe.tree.Symbol;
 import pro.trevor.joe.tree.declaration.*;
 import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.binary.*;
@@ -40,7 +41,7 @@ public class PrintVisitor implements IVisitor {
         sb.append("class ").append(classDeclaration.getIdentifier().getName()).append('\n');
         printWithIndent("{");
         ++indentFactor;
-        for (ClassMember declaration : classDeclaration.getTypeMembers()) {
+        for (ClassMember declaration : classDeclaration.getClassMembers()) {
             sb.append("\n");
             visit(declaration);
         }
@@ -50,12 +51,45 @@ public class PrintVisitor implements IVisitor {
     }
 
     @Override
+    public void visit(EnumDeclaration enumDeclaration) {
+        printWithIndent(enumDeclaration.getAccess().name().toLowerCase());
+        sb.append(' ');
+        if (enumDeclaration.isStatic()) {
+            sb.append("static ");
+        }
+        if (enumDeclaration.isFinal()) {
+            sb.append("final ");
+        }
+        sb.append("enum ").append(enumDeclaration.getIdentifier().getName()).append('\n');
+        printWithIndent("{");
+        ++indentFactor;
+        for (EnumMember declaration : enumDeclaration.getEnumMembers()) {
+            sb.append("\n");
+            visit(declaration);
+            sb.append(',');
+        }
+        --indentFactor;
+        sb.append('\n');
+        printWithIndent("}");
+    }
+
+    @Override
+    public void visit(EnumVariantDeclaration enumVariantDeclaration) {
+        printWithIndent(enumVariantDeclaration.getIdentifier().getName());
+        sb.append('(');
+        for (Symbol symbol : enumVariantDeclaration.getTypes()) {
+            sb.append(symbol.getName()).append(",");
+        }
+        sb.append(")");
+    }
+
+    @Override
     public void visit(FunctionDeclaration functionDeclaration) {
         printWithIndent(functionDeclaration.getAccess().name().toLowerCase());
         sb.append(' ').append(functionDeclaration.getIdentifier().getName()).append('(');
         for (ParameterDeclaration x : functionDeclaration.getArguments()) {
             visit(x);
-            sb.append(", ");
+            sb.append(",");
         }
         sb.append(") ").append(functionDeclaration.getReturnType().toString()).append(' ');
         visit(functionDeclaration.getCode());

@@ -35,19 +35,31 @@ public class Parser {
 
 
     /*
-     * [public|private|protected] [static] [final] class|enum|interface $identifier { MemberDeclaration* }
+     * [public|private|protected] [static] [final] class|enum|interface $identifier { ...* }
      */
-    public ClassDeclaration parseClass() throws ParseException {
+    public TypeDeclaration parseType() throws ParseException {
 
         Access access = consumeAccessIfPresent();
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
 
-        return parseClass(access, isStatic, isFinal);
+        return parseType(access, isStatic, isFinal);
     }
 
     /*
-     * class|enum|interface $identifier { MemberDeclaration* }
+     * class|enum|interface $identifier { ...* }
+     */
+    public TypeDeclaration parseType(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+        return switch (token.getType()) {
+            case CLASS -> parseClass(access, isStatic, isFinal);
+            case ENUM -> parseEnum(access, isStatic, isFinal);
+            case INTERFACE -> parseInterface(access, isStatic, isFinal);
+            default -> throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE}, token);
+        };
+    }
+
+    /*
+     * class $identifier { MemberDeclaration* }
      */
     private ClassDeclaration parseClass(Access access, boolean isStatic, boolean isFinal) throws ParseException {
         Token classToken = expectAndConsume(TokenType.CLASS);
@@ -58,11 +70,53 @@ public class Parser {
         expectAndConsume(TokenType.LBRACE);
 
         while (token.getType() != TokenType.RBRACE) {
-            classDeclaration.addMemberDeclaration((ClassMember) parseTypeMemberDeclaration());
+            classDeclaration.addMemberDeclaration(parseClassMember());
         }
 
         expectAndConsumeMaybeEof(TokenType.RBRACE);
         return classDeclaration;
+    }
+
+    /*
+     * interface $identifier { InterfaceMember* }
+     */
+    private InterfaceDeclaration parseInterface(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+        Token interfaceToken = expectAndConsume(TokenType.INTERFACE);
+        Token interfaceNameToken = expectAndConsume(TokenType.IDENTIFIER);
+
+        InterfaceDeclaration interfaceDeclaration = new InterfaceDeclaration(interfaceToken.getBeginLocation(), new Symbol(interfaceNameToken.getText()), access, isStatic, isFinal);
+
+        expectAndConsume(TokenType.LBRACE);
+
+        while (token.getType() != TokenType.RBRACE) {
+            interfaceDeclaration.addInterfaceMember(parseInterfaceMember());
+        }
+
+        expectAndConsumeMaybeEof(TokenType.RBRACE);
+        return interfaceDeclaration;
+    }
+
+    /*
+     * enum $identifier { EnumMember* }
+     */
+    private EnumDeclaration parseEnum(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+        Token interfaceToken = expectAndConsume(TokenType.ENUM);
+        Token interfaceNameToken = expectAndConsume(TokenType.IDENTIFIER);
+
+        EnumDeclaration enumDeclaration = new EnumDeclaration(interfaceToken.getBeginLocation(), new Symbol(interfaceNameToken.getText()), access, isStatic, isFinal);
+
+        expectAndConsume(TokenType.LBRACE);
+
+        if (token.getType() != TokenType.RBRACE) {
+            enumDeclaration.addEnumMember(parseEnumMember());
+            while (token.getType() == TokenType.COMMA) {
+                expectAndConsume(TokenType.COMMA);
+                enumDeclaration.addEnumMember(parseEnumMember());
+            }
+        }
+
+        expectAndConsumeMaybeEof(TokenType.RBRACE);
+        return enumDeclaration;
     }
 
     /*
@@ -71,58 +125,26 @@ public class Parser {
      *   [static]
      *   [final]
      *   (
-     *     class|enum|interface $identifier { MemberDeclaration* } |
+     *     class $identifier { ClassMember* } |
+     *     enum $identifier { EnumMember* } |
+     *     interface $identifier { InterfaceMember* } |
      *     fn $identifier([ParameterDeclaration (, ParameterDeclaration)*]) $type { Statement* } |
      *     $type $identifier;
      *   )
-     * *)
+     * )
      *
      */
-    private TypeMember parseTypeMemberDeclaration() throws ParseException {
+    private ClassMember parseClassMember() throws ParseException {
         Access access = consumeAccessIfPresent();
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
 
-        TypeMember declaration;
+        ClassMember declaration;
 
         if (token.getType() == TokenType.CLASS || token.getType() == TokenType.ENUM || token.getType() == TokenType.INTERFACE) {
-            // Inner class declaration
-            declaration = parseClass(access, isStatic, isFinal);
+            declaration = (ClassMember) parseType(access, isStatic, isFinal);
         } else if (token.getType() == TokenType.FN) {
-            // Member function declaration
-            Location beginning = token.getBeginLocation();
-            consume();
-            Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
-
-            FunctionDeclaration functionDeclaration = new FunctionDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, null, new ArrayList<>(), null);
-
-            expectAndConsume(TokenType.LPAREN);
-            if (token.getType() != TokenType.RPAREN) {
-                do {
-                    Token parameterType = token;
-                    Token parameterIdentifier = expectAndConsume(TokenType.IDENTIFIER);
-                    functionDeclaration.getArguments().add(new ParameterDeclaration(parameterType.getBeginLocation(), new Symbol(parameterType.getText()), new Symbol(parameterIdentifier.getText())));
-                    if (token.getType() == TokenType.COMMA) {
-                        consume();
-                    }
-                }
-                while (token.getType() != TokenType.RPAREN);
-            }
-            expectAndConsume(TokenType.RPAREN);
-
-            Token typeToken = token;
-            Block code = new Block(token.getBeginLocation());
-
-            consume();
-            expectAndConsume(TokenType.LBRACE);
-            while (token.getType() != TokenType.RBRACE) {
-                code.addStatement(parseStatement());
-            }
-            expectAndConsume(TokenType.RBRACE);
-
-            functionDeclaration.setReturnType(new Symbol(typeToken.getText()));
-            functionDeclaration.setCode(code);
-            declaration = functionDeclaration;
+            declaration = parseFunctionDeclaration(access, isStatic, isFinal);
         } else if (token.getType() == TokenType.IDENTIFIER || token.getType().isPrimitive()){
             // Member variable declaration
             Token typeToken = token;
@@ -131,10 +153,135 @@ public class Parser {
             expectAndConsume(TokenType.SEMICOLON);
             declaration = new VariableDeclaration(typeToken.getBeginLocation(), new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()));
         } else {
-            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.FN, TokenType.IDENTIFIER}, token);
+            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN, TokenType.IDENTIFIER}, token);
         }
 
         return declaration;
+    }
+
+    /*
+     * (
+     *   [public|private|protected]
+     *   [static]
+     *   [final]
+     *   (
+     *     class $identifier { ClassMember* } |
+     *     enum $identifier { EnumMember* } |
+     *     interface $identifier { InterfaceMember* } |
+     *     fn $identifier([ParameterDeclaration (, ParameterDeclaration)*]) $type;
+     *   )
+     * )
+     *
+     */
+    private InterfaceMember parseInterfaceMember() throws ParseException {
+        Access access = consumeAccessIfPresent();
+        boolean isStatic = consumeStaticIfPresent();
+        boolean isFinal = consumeFinalIfPresent();
+
+        InterfaceMember declaration;
+
+        if (token.getType() == TokenType.CLASS || token.getType() == TokenType.ENUM || token.getType() == TokenType.INTERFACE) {
+            declaration = (InterfaceMember) parseType(access, isStatic, isFinal);
+        } else if (token.getType() == TokenType.FN) {
+            declaration = parseFunctionStubDeclaration(access, isStatic, isFinal);
+        } else {
+            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN}, token);
+        }
+
+        return declaration;
+    }
+
+    /*
+     *   $identifier[([Type] (, Type)*])]*
+     */
+    private EnumMember parseEnumMember() throws ParseException {
+        EnumMember declaration;
+
+        if (token.getType() == TokenType.IDENTIFIER) {
+            Token identifier = expectAndConsume(TokenType.IDENTIFIER);
+            List<Symbol> types = new ArrayList<>();
+            if (token.getType() == TokenType.LPAREN) {
+                expectAndConsume(TokenType.LPAREN);
+                if (token.getType() != TokenType.RPAREN) {
+                    types.add(new Symbol(expectAndConsumeType().getText()));
+
+                    while (token.getType() == TokenType.COMMA) {
+                        expectAndConsume(TokenType.COMMA);
+                        types.add(new Symbol(expectAndConsumeType().getText()));
+                    }
+                }
+                expectAndConsume(TokenType.RPAREN);
+            }
+            declaration = new EnumVariantDeclaration(identifier.getBeginLocation(), new Symbol(identifier.getText()), types);
+        } else {
+            throw new ParseException(token.getBeginLocation(), TokenType.IDENTIFIER, token);
+        }
+
+        return declaration;
+    }
+
+
+    private List<ParameterDeclaration> parseParameterDeclarations() throws ParseException{
+        List<ParameterDeclaration> declarations = new ArrayList<>();
+        expectAndConsume(TokenType.LPAREN);
+
+        if (token.getType() != TokenType.RPAREN) {
+            declarations.add(parseParameterDeclaration());
+            while (token.getType() == TokenType.COMMA) {
+                expectAndConsume(TokenType.COMMA);
+                declarations.add(parseParameterDeclaration());
+            }
+        }
+
+        expectAndConsume(TokenType.RPAREN);
+        return declarations;
+    }
+
+    private ParameterDeclaration parseParameterDeclaration() throws ParseException {
+        Token typeToken = expectAndConsumeType();
+        Token identifier = expectAndConsume(TokenType.IDENTIFIER);
+
+        return new ParameterDeclaration(typeToken.getBeginLocation(), new Symbol(typeToken.getText()), new Symbol(identifier.getText()));
+    }
+
+    private FunctionStubDeclaration parseFunctionStubDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+        Location beginning = token.getBeginLocation();
+        consume();
+        Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
+
+        List<ParameterDeclaration> parameters = parseParameterDeclarations();
+
+        Token typeToken = token;
+        Block code = new Block(token.getBeginLocation());
+
+        consume();
+        expectAndConsume(TokenType.LBRACE);
+        while (token.getType() != TokenType.RBRACE) {
+            code.addStatement(parseStatement());
+        }
+        expectAndConsume(TokenType.RBRACE);
+
+        return new FunctionStubDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()), parameters);
+    }
+
+    private FunctionDeclaration parseFunctionDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+        Location beginning = token.getBeginLocation();
+        consume();
+        Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
+
+        List<ParameterDeclaration> parameters = parseParameterDeclarations();
+
+        Token typeToken = token;
+        Block code = new Block(token.getBeginLocation());
+
+        consume();
+        expectAndConsume(TokenType.LBRACE);
+        while (token.getType() != TokenType.RBRACE) {
+            code.addStatement(parseStatement());
+        }
+        expectAndConsume(TokenType.RBRACE);
+
+        return new FunctionDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()), parameters, code);
     }
 
     private Block parseCodeBlock() throws ParseException {
@@ -188,6 +335,7 @@ public class Parser {
                     statement = new ReturnStatement(returnToken.getBeginLocation(), null);
                 } else {
                     statement = new ReturnStatement(returnToken.getBeginLocation(), parseExpression());
+                    expectAndConsume(TokenType.SEMICOLON);
                 }
             }
             default -> {
@@ -453,6 +601,15 @@ public class Parser {
     private Token expectAndConsume(TokenType type) throws ParseException {
         if (token.getType() != type) {
             throw new ParseException(token.getBeginLocation(), type, token);
+        }
+        Token old = token;
+        consume();
+        return old;
+    }
+
+    private Token expectAndConsumeType() throws ParseException {
+        if (token.getType() != TokenType.IDENTIFIER && !token.getType().isPrimitive()) {
+            throw new ParseException(token.getBeginLocation(), "Expected type but got " + token.getType());
         }
         Token old = token;
         consume();

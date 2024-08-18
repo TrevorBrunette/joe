@@ -12,6 +12,8 @@ public interface IVisitor {
     default void visit(Declaration declaration) {
         switch (declaration) {
             case ClassDeclaration x -> visit(x);
+            case EnumDeclaration x -> visit(x);
+            case EnumVariantDeclaration x -> visit(x);
             case FunctionDeclaration x -> visit(x);
             case FunctionStubDeclaration x -> visit(x);
             case InterfaceDeclaration x -> visit(x);
@@ -30,6 +32,8 @@ public interface IVisitor {
     }
 
     void visit(ClassDeclaration classDeclaration);
+    void visit(EnumDeclaration enumDeclaration);
+    void visit(EnumVariantDeclaration enumVariantDeclaration);
     void visit(FunctionDeclaration functionDeclaration);
     void visit(FunctionStubDeclaration functionStubDeclaration);
     void visit(InterfaceDeclaration interfaceDeclaration);

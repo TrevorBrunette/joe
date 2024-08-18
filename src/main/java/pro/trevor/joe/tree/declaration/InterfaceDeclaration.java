@@ -6,7 +6,7 @@ import pro.trevor.joe.tree.Symbol;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InterfaceDeclaration extends AccessDeclaration {
+public class InterfaceDeclaration extends TypeDeclaration {
 
     private final List<InterfaceMember> interfaceMembers;
 

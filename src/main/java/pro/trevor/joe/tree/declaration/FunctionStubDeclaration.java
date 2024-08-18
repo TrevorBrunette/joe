@@ -5,9 +5,9 @@ import pro.trevor.joe.tree.Symbol;
 
 import java.util.List;
 
-public class FunctionStubDeclaration extends AccessDeclaration implements ClassMember, EnumMember, InterfaceMember {
+public class FunctionStubDeclaration extends AccessDeclaration implements InterfaceMember {
 
-    private Symbol returnType;
+    private final Symbol returnType;
     private final List<ParameterDeclaration> arguments;
 
     public FunctionStubDeclaration(Location location, Symbol identifier, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments) {
@@ -18,10 +18,6 @@ public class FunctionStubDeclaration extends AccessDeclaration implements ClassM
 
     public Symbol getReturnType() {
         return returnType;
-    }
-
-    public void setReturnType(Symbol returnType) {
-        this.returnType = returnType;
     }
 
     public List<ParameterDeclaration> getArguments() {

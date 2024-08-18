@@ -8,18 +8,18 @@ import java.util.List;
 
 public class ClassDeclaration extends TypeDeclaration implements ClassMember, EnumMember, InterfaceMember {
 
-    private final List<ClassMember> typeMembers;
+    private final List<ClassMember> classMembers;
 
     public ClassDeclaration(Location location, Symbol symbol, Access access, boolean isStatic, boolean isFinal) {
         super(location, symbol, access, isStatic, isFinal);
-        this.typeMembers = new ArrayList<>();
+        this.classMembers = new ArrayList<>();
     }
 
     public void addMemberDeclaration(ClassMember classMember) {
-        typeMembers.add(classMember);
+        classMembers.add(classMember);
     }
 
-    public List<ClassMember> getTypeMembers() {
-        return typeMembers;
+    public List<ClassMember> getClassMembers() {
+        return classMembers;
     }
 }

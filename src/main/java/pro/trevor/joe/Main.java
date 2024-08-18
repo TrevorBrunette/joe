@@ -4,7 +4,7 @@ import pro.trevor.joe.lexer.Lexer;
 import pro.trevor.joe.parser.ParseException;
 import pro.trevor.joe.parser.Parser;
 import pro.trevor.joe.parser.PrintVisitor;
-import pro.trevor.joe.tree.declaration.ClassDeclaration;
+import pro.trevor.joe.tree.declaration.TypeDeclaration;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class Main {
         } catch (IOException ignored) {}
         Lexer lexer = new Lexer(text);
         Parser parser = new Parser(lexer);
-        ClassDeclaration tree = parser.parseClass();
+        TypeDeclaration tree = parser.parseType();
         PrintVisitor visitor = new PrintVisitor();
         visitor.visit(tree);
         System.out.println(visitor);

@@ -42,6 +42,7 @@ public enum TokenType {
     ELSE("else"),
     ENUM("enum"),
     EXTENDS("extends"),
+    EXTERN("extern"),
     FALSE("false"),
     FINAL("final"),
     FN("fn"),
