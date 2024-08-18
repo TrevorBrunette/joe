@@ -10,17 +10,9 @@ public class ClassDeclaration extends TypeDeclaration implements ClassMember, En
 
     private final List<ClassMember> typeMembers;
 
-    public ClassDeclaration(Location location, Symbol symbol, TypeDeclaration typeDeclaration, Access access, boolean isStatic, boolean isFinal) {
-        super(location, symbol, typeDeclaration, access, isStatic, isFinal);
+    public ClassDeclaration(Location location, Symbol symbol, Access access, boolean isStatic, boolean isFinal) {
+        super(location, symbol, access, isStatic, isFinal);
         this.typeMembers = new ArrayList<>();
-    }
-
-    public ClassDeclaration(Location location, Symbol symbol, ClassDeclaration classDeclaration) {
-        this(location, symbol, classDeclaration, Access.PRIVATE, false, false);
-    }
-
-    public ClassDeclaration(Location location, Symbol symbol) {
-        this(location, symbol, null);
     }
 
     public void addMemberDeclaration(ClassMember classMember) {

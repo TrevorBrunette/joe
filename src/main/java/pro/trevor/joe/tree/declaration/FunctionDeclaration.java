@@ -13,8 +13,8 @@ public class FunctionDeclaration extends AccessDeclaration implements ClassMembe
     private final List<ParameterDeclaration> arguments;
     private Block code;
 
-    public FunctionDeclaration(Location location, Symbol identifier, Declaration parent, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments, Block code) {
-        super(location, identifier, parent, access, isStatic, isFinal);
+    public FunctionDeclaration(Location location, Symbol identifier, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments, Block code) {
+        super(location, identifier, access, isStatic, isFinal);
         this.returnType = returnType;
         this.arguments = arguments;
         this.code = code;

@@ -18,7 +18,7 @@ public class Main {
         } catch (IOException ignored) {}
         Lexer lexer = new Lexer(text);
         Parser parser = new Parser(lexer);
-        ClassDeclaration tree = parser.parseClass(null);
+        ClassDeclaration tree = parser.parseClass();
         PrintVisitor visitor = new PrintVisitor();
         visitor.visit(tree);
         System.out.println(visitor);

@@ -7,19 +7,13 @@ import pro.trevor.joe.tree.Symbol;
 public abstract class Declaration extends Node {
 
     private final Symbol identifier;
-    private final Declaration parent;
 
-    public Declaration(Location location, Symbol identifier, Declaration parent) {
+    public Declaration(Location location, Symbol identifier) {
         super(location);
         this.identifier = identifier;
-        this.parent = parent;
     }
 
     public Symbol getIdentifier() {
         return identifier;
-    }
-
-    public Declaration getParent() {
-        return parent;
     }
 }

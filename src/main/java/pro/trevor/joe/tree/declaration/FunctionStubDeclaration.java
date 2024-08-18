@@ -10,8 +10,8 @@ public class FunctionStubDeclaration extends AccessDeclaration implements ClassM
     private Symbol returnType;
     private final List<ParameterDeclaration> arguments;
 
-    public FunctionStubDeclaration(Location location, Symbol identifier, Declaration parent, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments) {
-        super(location, identifier, parent, access, isStatic, isFinal);
+    public FunctionStubDeclaration(Location location, Symbol identifier, Access access, boolean isStatic, boolean isFinal, Symbol returnType, List<ParameterDeclaration> arguments) {
+        super(location, identifier, access, isStatic, isFinal);
         this.returnType = returnType;
         this.arguments = arguments;
     }

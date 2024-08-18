@@ -7,8 +7,8 @@ public class VariableDeclaration extends AccessDeclaration implements ClassMembe
 
     private Symbol type;
 
-    public VariableDeclaration(Location location, Symbol identifier, TypeDeclaration typeDeclaration, Access access, boolean isStatic, boolean isFinal, Symbol type) {
-        super(location, identifier, typeDeclaration, access, isStatic, isFinal);
+    public VariableDeclaration(Location location, Symbol identifier, Access access, boolean isStatic, boolean isFinal, Symbol type) {
+        super(location, identifier, access, isStatic, isFinal);
         this.type = type;
     }
 
