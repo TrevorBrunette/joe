@@ -4,6 +4,7 @@ import pro.trevor.joe.lexer.Lexer;
 import pro.trevor.joe.parser.ParseException;
 import pro.trevor.joe.parser.Parser;
 import pro.trevor.joe.parser.PrintVisitor;
+import pro.trevor.joe.parser.SymbolVisitor;
 import pro.trevor.joe.tree.declaration.TypeDeclaration;
 
 import java.io.FileInputStream;
@@ -19,9 +20,12 @@ public class Main {
         Lexer lexer = new Lexer(text);
         Parser parser = new Parser(lexer);
         TypeDeclaration tree = parser.parseType();
-        PrintVisitor visitor = new PrintVisitor();
-        visitor.visit(tree);
-        System.out.println(visitor);
+        PrintVisitor printVisitor = new PrintVisitor();
+        printVisitor.visit(tree);
+        System.out.println(printVisitor);
+        SymbolVisitor symbolVisitor = new SymbolVisitor();
+        symbolVisitor.visit(tree);
+        System.out.println(symbolVisitor.getSymbolTable().values());
     }
 
 }
