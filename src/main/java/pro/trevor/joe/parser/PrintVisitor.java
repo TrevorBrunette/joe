@@ -12,6 +12,7 @@ import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.tree.statement.*;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class PrintVisitor implements IVisitor {
 
@@ -26,6 +27,15 @@ public class PrintVisitor implements IVisitor {
 
     private void printWithIndent(String string) {
         sb.repeat(' ', indentFactor * 2).append(string);
+    }
+
+    private <T> void forEachExceptLast(List<T> list, Consumer<T> majority, Consumer<T> last) {
+        for (int i = 0; i < list.size() - 1; i++) {
+            majority.accept(list.get(i));
+        }
+        if (!list.isEmpty()) {
+            last.accept(list.getLast());
+        }
     }
 
     @Override
@@ -63,11 +73,16 @@ public class PrintVisitor implements IVisitor {
         sb.append("enum ").append(enumDeclaration.getIdentifier().getName()).append('\n');
         printWithIndent("{");
         ++indentFactor;
-        for (EnumMember declaration : enumDeclaration.getEnumMembers()) {
+
+        forEachExceptLast(enumDeclaration.getEnumMembers(), (declaration) -> {
             sb.append("\n");
             visit(declaration);
             sb.append(',');
-        }
+        }, (last) -> {
+            sb.append("\n");
+            visit(last);
+        });
+
         --indentFactor;
         sb.append('\n');
         printWithIndent("}");
@@ -77,9 +92,11 @@ public class PrintVisitor implements IVisitor {
     public void visit(EnumVariantDeclaration enumVariantDeclaration) {
         printWithIndent(enumVariantDeclaration.getIdentifier().getName());
         sb.append('(');
-        for (Symbol symbol : enumVariantDeclaration.getTypes()) {
-            sb.append(symbol.getName()).append(",");
-        }
+        forEachExceptLast(enumVariantDeclaration.getTypes(), (symbol) -> {
+            sb.append(symbol.getName()).append(", ");
+        }, (last) -> {
+            sb.append(last.getName());
+        });
         sb.append(")");
     }
 
@@ -87,10 +104,10 @@ public class PrintVisitor implements IVisitor {
     public void visit(FunctionDeclaration functionDeclaration) {
         printWithIndent(functionDeclaration.getAccess().name().toLowerCase());
         sb.append(' ').append(functionDeclaration.getIdentifier().getName()).append('(');
-        for (ParameterDeclaration x : functionDeclaration.getArguments()) {
-            visit(x);
-            sb.append(",");
-        }
+        forEachExceptLast(functionDeclaration.getArguments(), (argument) -> {
+            visit(argument);
+            sb.append(", ");
+        }, this::visit);
         sb.append(") ").append(functionDeclaration.getReturnType().toString()).append(' ');
         visit(functionDeclaration.getCode());
     }
@@ -99,10 +116,10 @@ public class PrintVisitor implements IVisitor {
     public void visit(FunctionStubDeclaration functionStubDeclaration) {
         printWithIndent(functionStubDeclaration.getAccess().name().toLowerCase());
         sb.append(' ').append(functionStubDeclaration.getIdentifier().getName()).append('(');
-        for (ParameterDeclaration x : functionStubDeclaration.getArguments()) {
-            visit(x);
+        forEachExceptLast(functionStubDeclaration.getArguments(), (argument) -> {
+            visit(argument);
             sb.append(", ");
-        }
+        }, this::visit);
         sb.append(") ").append(functionStubDeclaration.getReturnType().toString()).append(';');
     }
 
