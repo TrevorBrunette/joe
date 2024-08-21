@@ -37,3 +37,9 @@ public class Main {
         }
     }
 }
+
+extern fn printf(char[] str) void;
+
+fn printHello() void {
+    printf("Hello World!");
+}

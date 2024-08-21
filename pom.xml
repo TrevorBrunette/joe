@@ -16,14 +16,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>9.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-tree</artifactId>
-            <version>9.7</version>
+            <groupId>org.bytedeco.javacpp-presets</groupId>
+            <artifactId>llvm-platform</artifactId>
+            <version>7.0.1-1.4.4</version>
         </dependency>
     </dependencies>
 </project>

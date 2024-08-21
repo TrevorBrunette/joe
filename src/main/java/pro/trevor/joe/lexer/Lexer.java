@@ -8,6 +8,8 @@ public class Lexer {
     private static final char INVALID = (char) -1;
 
     private final Iterator<Character> text;
+    private Token lookAhead;
+    private Token lookAhead2;
     private int previousLine;
     private int previousCharacter;
     private int line;
@@ -16,6 +18,8 @@ public class Lexer {
 
     public Lexer(String text) {
         this.text = text.chars().mapToObj((i) -> (char) i).iterator();
+        this.lookAhead = null;
+        this.lookAhead2 = null;
         this.previousLine = 1;
         this.previousCharacter = 1;
         this.line = 1;
@@ -23,7 +27,34 @@ public class Lexer {
         this.c = this.text.hasNext() ? this.text.next() : INVALID;
     }
 
+    public Token getLookAhead() {
+        if (lookAhead == null) {
+            lookAhead = readNextToken();
+        }
+        return lookAhead;
+    }
+
+    public Token getLookAhead2() {
+        if (lookAhead2 == null) {
+            getLookAhead();
+            lookAhead2 = readNextToken();
+        }
+        return lookAhead;
+    }
+
     public Token getNextToken() {
+        Token result;
+        if (lookAhead == null) {
+            result = readNextToken();
+        } else {
+            result = lookAhead;
+            lookAhead = lookAhead2;
+            lookAhead2 = null;
+        }
+        return result;
+    }
+
+    private Token readNextToken() {
         Token token = null;
         while (token == null || token.getType() == TokenType.COMMENT) {
             token = nextToken();

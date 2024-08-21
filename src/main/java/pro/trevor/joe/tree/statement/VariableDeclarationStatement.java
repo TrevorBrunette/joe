@@ -4,19 +4,20 @@ import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.tree.IStatement;
 import pro.trevor.joe.tree.Node;
 import pro.trevor.joe.tree.Symbol;
+import pro.trevor.joe.tree.Type;
 
 public class VariableDeclarationStatement extends Node implements IStatement {
 
-    private final Symbol type;
+    private final Type type;
     private final Symbol identifier;
 
-    public VariableDeclarationStatement(Location location, Symbol type, Symbol identifier) {
+    public VariableDeclarationStatement(Location location, Type type, Symbol identifier) {
         super(location);
         this.type = type;
         this.identifier = identifier;
     }
 
-    public Symbol getType() {
+    public Type getType() {
         return type;
     }
 

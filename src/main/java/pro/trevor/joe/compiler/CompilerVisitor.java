@@ -1,7 +1,6 @@
-package pro.trevor.joe.parser;
+package pro.trevor.joe.compiler;
 
-import pro.trevor.joe.lexer.TokenType;
-import pro.trevor.joe.tree.*;
+import pro.trevor.joe.tree.IVisitor;
 import pro.trevor.joe.tree.declaration.*;
 import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.binary.*;
@@ -10,116 +9,55 @@ import pro.trevor.joe.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.tree.statement.*;
 
-import java.util.HashMap;
-import java.util.Map;
+public class CompilerVisitor implements IVisitor {
 
-public class SymbolVisitor implements IVisitor {
+    public CompilerVisitor() {
 
-    private final Map<Node, SymbolTable> symbolTable;
-    private Node parent;
-
-    public SymbolVisitor() {
-        this.symbolTable = new HashMap<>();
-        this.parent = null;
-    }
-
-    public Map<Node, SymbolTable> getSymbolTable() {
-        return symbolTable;
-    }
-
-    private void put(Node node, SymbolInfo symbolInfo) {
-        symbolTable.computeIfAbsent(node, k -> new SymbolTable());
-        symbolTable.get(node).put(symbolInfo.getSymbol(), symbolInfo);
     }
 
     @Override
     public void visit(ClassDeclaration classDeclaration) {
-        if (parent == null) {
-            parent = classDeclaration;
-        }
-        put(parent, new SymbolInfo(classDeclaration.getIdentifier(), SymbolType.CLASS));
-        Node previous = parent;
-        parent = classDeclaration;
-        for (ClassMember member : classDeclaration.getClassMembers()) {
-            visit(member);
-        }
-        parent = previous;
+
     }
 
     @Override
     public void visit(EnumDeclaration enumDeclaration) {
-        if (parent == null) {
-            parent = enumDeclaration;
-        }
-        put(parent, new SymbolInfo(enumDeclaration.getIdentifier(), SymbolType.ENUM));
-        Node previous = parent;
-        parent = enumDeclaration;
-        for (EnumMember member : enumDeclaration.getEnumMembers()) {
-            visit(member);
-        }
-        parent = previous;
+
     }
 
     @Override
     public void visit(EnumVariantDeclaration enumVariantDeclaration) {
-        put(parent, new SymbolVariableInfo(enumVariantDeclaration.getIdentifier(), new Type(((Declaration) parent).getIdentifier())));
+
     }
 
     @Override
     public void visit(FunctionDeclaration functionDeclaration) {
-        put(parent, new SymbolFunctionInfo(functionDeclaration.getIdentifier(), functionDeclaration.getReturnType()));
-        Node previous = parent;
-        parent = functionDeclaration;
-        for (ParameterDeclaration declaration : functionDeclaration.getArguments()) {
-            visit(declaration);
-        }
-        visit(functionDeclaration.getCode());
-        parent = previous;
+
     }
 
     @Override
     public void visit(FunctionStubDeclaration functionStubDeclaration) {
-        put(parent, new SymbolFunctionInfo(functionStubDeclaration.getIdentifier(), functionStubDeclaration.getReturnType()));
-        Node previous = parent;
-        parent = functionStubDeclaration;
-        for (ParameterDeclaration declaration : functionStubDeclaration.getArguments()) {
-            visit(declaration);
-        }
-        parent = previous;
+
     }
 
     @Override
     public void visit(InterfaceDeclaration interfaceDeclaration) {
-        if (parent == null) {
-            parent = interfaceDeclaration;
-        }
-        put(parent, new SymbolInfo(interfaceDeclaration.getIdentifier(), SymbolType.INTERFACE));
-        Node previous = parent;
-        parent = interfaceDeclaration;
-        for (InterfaceMember member : interfaceDeclaration.getInterfaceMembers()) {
-            visit(member);
-        }
-        parent = previous;
+
     }
 
     @Override
     public void visit(VariableDeclaration variableDeclaration) {
-        put(parent, new SymbolVariableInfo(variableDeclaration.getIdentifier(), variableDeclaration.getType()));
+
     }
 
     @Override
     public void visit(ParameterDeclaration parameterDeclaration) {
-        put(parent, new SymbolVariableInfo(parameterDeclaration.getIdentifier(), parameterDeclaration.getType()));
+
     }
 
     @Override
     public void visit(Block block) {
-        Node previous = parent;
-        parent = block;
-        for (IStatement statement : block.getStatements()) {
-            visit(statement);
-        }
-        parent = previous;
+
     }
 
     @Override
@@ -144,12 +82,12 @@ public class SymbolVisitor implements IVisitor {
 
     @Override
     public void visit(VariableInitializationStatement variableInitializationStatement) {
-        put(parent, new SymbolVariableInfo(variableInitializationStatement.getIdentifier(), variableInitializationStatement.getType()));
+
     }
 
     @Override
     public void visit(VariableDeclarationStatement variableDeclarationStatement) {
-        put(parent, new SymbolVariableInfo(variableDeclarationStatement.getIdentifier(), variableDeclarationStatement.getType()));
+
     }
 
     @Override

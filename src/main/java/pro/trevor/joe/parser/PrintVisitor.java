@@ -92,10 +92,10 @@ public class PrintVisitor implements IVisitor {
     public void visit(EnumVariantDeclaration enumVariantDeclaration) {
         printWithIndent(enumVariantDeclaration.getIdentifier().getName());
         sb.append('(');
-        forEachExceptLast(enumVariantDeclaration.getTypes(), (symbol) -> {
-            sb.append(symbol.getName()).append(", ");
+        forEachExceptLast(enumVariantDeclaration.getTypes(), (type) -> {
+            sb.append(type.toString()).append(", ");
         }, (last) -> {
-            sb.append(last.getName());
+            sb.append(last.toString());
         });
         sb.append(")");
     }

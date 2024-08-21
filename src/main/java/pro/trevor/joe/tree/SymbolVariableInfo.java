@@ -2,14 +2,14 @@ package pro.trevor.joe.tree;
 
 public class SymbolVariableInfo extends SymbolInfo {
 
-    private final Symbol declaredType;
+    private final Type declaredType;
 
-    public SymbolVariableInfo(Symbol symbol, Symbol declaredType) {
+    public SymbolVariableInfo(Symbol symbol, Type declaredType) {
         super(symbol, SymbolType.VARIABLE);
         this.declaredType = declaredType;
     }
 
-    public Symbol getDeclaredType() {
+    public Type getDeclaredType() {
         return declaredType;
     }
 

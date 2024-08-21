@@ -6,6 +6,7 @@ import pro.trevor.joe.lexer.Token;
 import pro.trevor.joe.lexer.TokenType;
 import pro.trevor.joe.tree.IStatement;
 import pro.trevor.joe.tree.Symbol;
+import pro.trevor.joe.tree.Type;
 import pro.trevor.joe.tree.declaration.*;
 import pro.trevor.joe.tree.expression.*;
 import pro.trevor.joe.tree.expression.binary.*;
@@ -24,32 +25,63 @@ public class Parser {
 
     private final Lexer lexer;
     private final List<ParseException> errors;
+    private final List<TopLevelDeclaration> file;
 
     private Token token;
 
     public Parser(Lexer lexer) {
         this.lexer = lexer;
         this.errors = new ArrayList<>();
+        this.file = new ArrayList<>();
         consumeMaybeEof();
     }
 
+    /*
+     * (
+     *   ([public|private|protected] [static] [final] class|enum|interface $identifier { ...* }) |
+     *   (fn $identifier([type $identifier (, type $identifier)*]) { Statement* }) |
+     *   (extern fn $identifier([type $identifier (, type $identifier)*]);)
+     * )*
+     */
+    public List<TopLevelDeclaration> parseFile() throws ParseException {
+        while (token.getType() != TokenType.EOF) {
+            file.add(parseTopLevelDeclaration());
+        }
+        return file;
+    }
 
     /*
-     * [public|private|protected] [static] [final] class|enum|interface $identifier { ...* }
+     * [public|private|protected] [static] [final] class|enum|interface|fn $identifier { ...* }
      */
-    public TypeDeclaration parseType() throws ParseException {
+    private TopLevelDeclaration parseTopLevelDeclaration() throws ParseException {
 
         Access access = consumeAccessIfPresent(Access.PRIVATE);
         boolean isStatic = consumeStaticIfPresent();
         boolean isFinal = consumeFinalIfPresent();
+        boolean isExtern = consumeExternIfPresent();
 
-        return parseType(access, isStatic, isFinal);
+        switch (token.getType()) {
+            case CLASS, ENUM, INTERFACE -> {
+                if (isExtern) {
+                    throw new ParseException(token.getBeginLocation(), "Type cannot be declared as extern");
+                }
+                return parseType(access, isStatic, isFinal);
+            }
+            case FN -> {
+                if (isExtern) {
+                    return parseFunctionStubDeclaration(access, isStatic, isFinal);
+                } else {
+                    return parseFunctionDeclaration(access, isStatic, isFinal);
+                }
+            }
+            default -> throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN}, token);
+        }
     }
 
     /*
      * class|enum|interface $identifier { ...* }
      */
-    public TypeDeclaration parseType(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private TypeDeclaration parseType(Access access, boolean isStatic, boolean isFinal) throws ParseException {
         return switch (token.getType()) {
             case CLASS -> parseClass(access, isStatic, isFinal);
             case ENUM -> parseEnum(access, isStatic, isFinal);
@@ -147,11 +179,11 @@ public class Parser {
             declaration = parseFunctionDeclaration(access, isStatic, isFinal);
         } else if (token.getType() == TokenType.IDENTIFIER || token.getType().isPrimitive()){
             // Member variable declaration
-            Token typeToken = token;
-            Token identifierToken = consume();
-            consume();
+            Token begin = token;
+            Type type = parseType();
+            Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
             expectAndConsume(TokenType.SEMICOLON);
-            declaration = new VariableDeclaration(typeToken.getBeginLocation(), new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()));
+            declaration = new VariableDeclaration(begin.getBeginLocation(), new Symbol(identifierToken.getText()), access, isStatic, isFinal, type);
         } else {
             throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN, TokenType.IDENTIFIER}, token);
         }
@@ -199,15 +231,17 @@ public class Parser {
 
         if (token.getType() == TokenType.IDENTIFIER) {
             Token identifier = expectAndConsume(TokenType.IDENTIFIER);
-            List<Symbol> types = new ArrayList<>();
+            List<Type> types = new ArrayList<>();
             if (token.getType() == TokenType.LPAREN) {
                 expectAndConsume(TokenType.LPAREN);
                 if (token.getType() != TokenType.RPAREN) {
-                    types.add(new Symbol(expectAndConsumeType().getText()));
+                    Type type = parseType();
+                    types.add(type);
 
                     while (token.getType() == TokenType.COMMA) {
                         expectAndConsume(TokenType.COMMA);
-                        types.add(new Symbol(expectAndConsumeType().getText()));
+                        type = parseType();
+                        types.add(type);
                     }
                 }
                 expectAndConsume(TokenType.RPAREN);
@@ -238,10 +272,11 @@ public class Parser {
     }
 
     private ParameterDeclaration parseParameterDeclaration() throws ParseException {
-        Token typeToken = expectAndConsumeType();
+        Token begin = token;
+        Type type = parseType();
         Token identifier = expectAndConsume(TokenType.IDENTIFIER);
 
-        return new ParameterDeclaration(typeToken.getBeginLocation(), new Symbol(typeToken.getText()), new Symbol(identifier.getText()));
+        return new ParameterDeclaration(begin.getBeginLocation(), type, new Symbol(identifier.getText()));
     }
 
     private FunctionStubDeclaration parseFunctionStubDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
@@ -251,10 +286,10 @@ public class Parser {
 
         List<ParameterDeclaration> parameters = parseParameterDeclarations();
 
-        Token typeToken = expectAndConsumeType();
-        expectAndConsume(TokenType.SEMICOLON);
+        Type type = parseType();
+        expectAndConsumeMaybeEof(TokenType.SEMICOLON);
 
-        return new FunctionStubDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()), parameters);
+        return new FunctionStubDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, type, parameters);
     }
 
     private FunctionDeclaration parseFunctionDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
@@ -264,17 +299,16 @@ public class Parser {
 
         List<ParameterDeclaration> parameters = parseParameterDeclarations();
 
-        Token typeToken = token;
+        Type type = parseType();
         Block code = new Block(token.getBeginLocation());
 
-        consume();
         expectAndConsume(TokenType.LBRACE);
         while (token.getType() != TokenType.RBRACE) {
             code.addStatement(parseStatement());
         }
-        expectAndConsume(TokenType.RBRACE);
+        expectAndConsumeMaybeEof(TokenType.RBRACE);
 
-        return new FunctionDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, new Symbol(typeToken.getText()), parameters, code);
+        return new FunctionDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, type, parameters, code);
     }
 
     private Block parseCodeBlock() throws ParseException {
@@ -332,65 +366,46 @@ public class Parser {
                 }
             }
             default -> {
-                Token first = token;
-                Token second = consume();
                 // ExpressionStatement | VariableDeclarationStatement | VariableInitializationStatement
-                if (first.getType().isPrimitive()) {
+                if (token.getType().isPrimitive() || (token.getType() == TokenType.IDENTIFIER && lexer.getLookAhead().getType() == TokenType.LBRACKET && lexer.getLookAhead2().getType() == TokenType.RBRACKET)) {
                     // Variable declaration or initialization
-                    consume();
-                    statement = parseVariableDeclaration(first, second);
+                    statement = parseVariableDeclaration();
                 } else {
-                    if (second.getType() == TokenType.IDENTIFIER) {
-                        // Variable declaration or initialization
-                        consume();
-                        statement = parseVariableDeclaration(first, second);
-                    } else {
-                        // Expression
-                        statement = new ExpressionStatement(first.getBeginLocation(), parseExpression(first));
-                        expectAndConsume(TokenType.SEMICOLON);
-                    }
+                    // Expression
+
+                    statement = new ExpressionStatement(token.getBeginLocation(), parseExpression());
+                    expectAndConsume(TokenType.SEMICOLON);
                 }
             }
         }
         return statement;
     }
 
-    private VariableDeclarationStatement parseVariableDeclaration(Token typeToken, Token identifierToken) throws ParseException {
-        Symbol type = new Symbol(typeToken.getText());
-        Symbol identifier = new Symbol(identifierToken.getText());
-
+    private VariableDeclarationStatement parseVariableDeclaration() throws ParseException {
+        Token begin = token;
+        Type type = parseType();
+        Symbol identifier = new Symbol(token.getText());
+        consume();
         if (token.getType() == TokenType.SEMICOLON) {
-            VariableDeclarationStatement declaration = new VariableDeclarationStatement(typeToken.getBeginLocation(), type, identifier);
+            VariableDeclarationStatement declaration = new VariableDeclarationStatement(begin.getBeginLocation(), type, identifier);
             expectAndConsume(TokenType.SEMICOLON);
             return declaration;
         } else if (token.getType() == TokenType.ASSIGN) {
             consume();
-            VariableDeclarationStatement declaration = new VariableInitializationStatement(typeToken.getBeginLocation(), type, identifier, parseExpression());
+            VariableInitializationStatement declaration = new VariableInitializationStatement(begin.getBeginLocation(), type, identifier, parseExpression());
             expectAndConsume(TokenType.SEMICOLON);
             return declaration;
         } else {
-            throw new ParseException(token.getBeginLocation(), "Expected semicolon or assignment");
+            throw new ParseException(token.getBeginLocation(), "Expected semicolon or assignment but got " + token.getText());
         }
     }
 
     private Expression parseExpression() throws ParseException {
-        Token old = token;
-        consume();
-        return parseExpression(old, Integer.MIN_VALUE);
+        return parseExpression(Integer.MIN_VALUE);
     }
 
     private Expression parseExpression(int precedence) throws ParseException {
-        Token old = token;
-        consume();
-        return parseExpression(old, precedence);
-    }
-
-    private Expression parseExpression(Token first) throws ParseException {
-        return parseExpression(first, Integer.MIN_VALUE);
-    }
-
-    private Expression parseExpression(Token first, int precedence) throws ParseException {
-        Expression output = parsePrimaryExpression(first);
+        Expression output = parsePrimaryExpression();
         Token operation = token;
 
         while (operation.getType().isBinaryOperator() || operation.getType().isPostfixOperator()) {
@@ -482,10 +497,10 @@ public class Parser {
                             }
                         }
                         expectAndConsume(TokenType.RPAREN);
-                        output = new MethodInvocationExpression(first.getBeginLocation(), output, parameters);
+                        output = new MethodInvocationExpression(output.location(), output, parameters);
                     }
                     case LBRACKET -> {
-                        output = new ArrayIndexExpression(operation.getBeginLocation(), output, parseExpression());
+                        output = new ArrayIndexExpression(output.location(), output, parseExpression());
                         expectAndConsume(TokenType.RBRACKET);
                     }
                     default ->
@@ -500,14 +515,16 @@ public class Parser {
         return output;
     }
 
-    private Expression parsePrimaryExpression(Token first) throws ParseException {
+    private Expression parsePrimaryExpression() throws ParseException {
+        Token begin = token;
+        consume();
         Expression expression;
-        switch (first.getType()) {
+        switch (begin.getType()) {
             case LNOT -> {
-                return new LogicalInvertExpression(first.getBeginLocation(), parseExpression());
+                expression = new LogicalInvertExpression(begin.getBeginLocation(), parseExpression());
             }
             case BNOT -> {
-                return new BinaryInvertExpression(first.getBeginLocation(), parseExpression());
+                expression = new BinaryInvertExpression(begin.getBeginLocation(), parseExpression());
             }
             case LPAREN -> {
                 expression = new WrappedExpression(parseExpression());
@@ -525,26 +542,45 @@ public class Parser {
                     }
                 }
                 expectAndConsume(TokenType.RPAREN);
-                expression = new ObjectInstantiationExpression(first.getBeginLocation(), new Symbol(typeToken.getText()), parameters);
+                expression = new ObjectInstantiationExpression(begin.getBeginLocation(), new Symbol(typeToken.getText()), parameters);
             }
             case CHAR_IMMEDIATE -> {
-                expression = new CharExpression(first.getBeginLocation(), first.getText().substring(1, first.getText().length() - 1));
+                expression = new CharExpression(begin.getBeginLocation(), begin.getText().substring(1, begin.getText().length() - 1));
             }
             case STRING_IMMEDIATE -> {
-                expression = new StringExpression(first.getBeginLocation(), first.getText().substring(1, first.getText().length() - 1));
+                expression = new StringExpression(begin.getBeginLocation(), begin.getText().substring(1, begin.getText().length() - 1));
             }
             case FLOAT_IMMEDIATE -> {
-                expression = new FloatExpression(first.getBeginLocation(), first.getText());
+                expression = new FloatExpression(begin.getBeginLocation(), begin.getText());
             }
             case INTEGER_IMMEDIATE -> {
-                expression = new IntegerExpression(first.getBeginLocation(), first.getText());
+                expression = new IntegerExpression(begin.getBeginLocation(), begin.getText());
             }
             case IDENTIFIER -> {
-                expression = new VariableExpression(first.getBeginLocation(), new Symbol(first.getText()));
+                expression = new VariableExpression(begin.getBeginLocation(), new Symbol(begin.getText()));
             }
-            default -> throw new ParseException(first.getBeginLocation(), String.format("Unexpected start of expression '%s'", first.getText()));
+            default -> throw new ParseException(begin.getBeginLocation(), String.format("Unexpected start of expression '%s'", begin.getText()));
         }
         return expression;
+    }
+
+    private Type parseType() throws ParseException {
+        if (!token.getType().isPrimitive() && !(token.getType() == TokenType.IDENTIFIER)) {
+            throw new ParseException(token.getBeginLocation(), "Expected primitive or identifier but got " + token.getType());
+        }
+        Token type = token;
+        consume();
+        int arrayLevel = 0;
+        while (token.getType() == TokenType.LBRACKET) {
+            consume();
+            expectAndConsume(TokenType.RBRACKET);
+            ++arrayLevel;
+        }
+        if (type.getType().isPrimitive()) {
+            return new Type(type.getType(), arrayLevel);
+        } else {
+            return new Type(new Symbol(type.toString()), arrayLevel);
+        }
     }
 
     private Access consumeAccessIfPresent(Access defaultAccess) throws ParseException {
@@ -585,6 +621,15 @@ public class Parser {
         }
     }
 
+    private boolean consumeExternIfPresent() throws ParseException{
+        if (token.getType() == TokenType.EXTERN) {
+            consume();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private void expect(TokenType type) throws ParseException {
         if (token.getType() != type) {
             throw new ParseException(token.getBeginLocation(), type, token);
@@ -594,15 +639,6 @@ public class Parser {
     private Token expectAndConsume(TokenType type) throws ParseException {
         if (token.getType() != type) {
             throw new ParseException(token.getBeginLocation(), type, token);
-        }
-        Token old = token;
-        consume();
-        return old;
-    }
-
-    private Token expectAndConsumeType() throws ParseException {
-        if (token.getType() != TokenType.IDENTIFIER && !token.getType().isPrimitive()) {
-            throw new ParseException(token.getBeginLocation(), "Expected type but got " + token.getType());
         }
         Token old = token;
         consume();

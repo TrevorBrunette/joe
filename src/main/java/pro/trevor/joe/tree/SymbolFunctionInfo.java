@@ -2,19 +2,19 @@ package pro.trevor.joe.tree;
 
 public class SymbolFunctionInfo extends SymbolInfo {
 
-    private final Symbol returnType;
+    private final Type returnType;
 
-    public SymbolFunctionInfo(Symbol symbol, Symbol returnType) {
+    public SymbolFunctionInfo(Symbol symbol, Type returnType) {
         super(symbol, SymbolType.FUNCTION);
         this.returnType = returnType;
     }
 
-    public Symbol getReturnType() {
+    public Type getReturnType() {
         return returnType;
     }
 
     @Override
     public String toString() {
-        return String.format("fn %s(%s)", symbol, returnType);
+        return String.format("fn %s() %s", symbol, returnType);
     }
 }
