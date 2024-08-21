@@ -372,7 +372,6 @@ public class Parser {
                     statement = parseVariableDeclaration();
                 } else {
                     // Expression
-
                     statement = new ExpressionStatement(token.getBeginLocation(), parseExpression());
                     expectAndConsume(TokenType.SEMICOLON);
                 }
@@ -503,8 +502,7 @@ public class Parser {
                         output = new ArrayIndexExpression(output.location(), output, parseExpression());
                         expectAndConsume(TokenType.RBRACKET);
                     }
-                    default ->
-                            throw new ParseException(operation.getBeginLocation(), "Unhandled postfix operator " + operation.getText());
+                    default -> throw new ParseException(operation.getBeginLocation(), "Unhandled postfix operator " + operation.getText());
                 }
             } else {
                 throw new ParseException(token.getBeginLocation(), "Unexpected internal state");
