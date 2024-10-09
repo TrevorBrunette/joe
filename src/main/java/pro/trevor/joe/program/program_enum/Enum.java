@@ -7,14 +7,14 @@ import java.util.List;
 
 public class Enum extends TopLevelNode {
 
-    private final List<EnumMember> members;
+    private final List<Variant> variants;
 
     public Enum(List<TopLevelNode> innerTopLevelNodes) {
         super(innerTopLevelNodes);
-        this.members = new ArrayList<>();
+        this.variants = new ArrayList<>();
     }
 
-    public List<EnumMember> getMembers() {
-        return members;
+    public List<Variant> getMembers() {
+        return variants;
     }
 }

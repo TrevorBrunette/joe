@@ -3,8 +3,8 @@ package pro.trevor.joe.program.program_class;
 import pro.trevor.joe.program.Access;
 import pro.trevor.joe.program.Parameter;
 import pro.trevor.joe.program.TypeReference;
-import pro.trevor.joe.program.program_class.code.CodeBlock;
 import pro.trevor.joe.program.program_class.code.Statement;
+import pro.trevor.joe.program.program_class.code.statement.Block;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public class MemberFunction {
     private final String identifier;
     private final List<Parameter> parameters;
     private final TypeReference returnType;
-    private final CodeBlock codeBlock;
+    private final Block codeBlock;
 
     public MemberFunction(Access access, boolean isStatic, String identifier, List<Parameter> parameters, TypeReference returnType) {
         this.access = access;
@@ -22,7 +22,7 @@ public class MemberFunction {
         this.identifier = identifier;
         this.parameters = parameters;
         this.returnType = returnType;
-        this.codeBlock = new CodeBlock();
+        this.codeBlock = new Block();
     }
 
     public void addStatement(Statement statement) {
@@ -49,7 +49,7 @@ public class MemberFunction {
         return returnType;
     }
 
-    public CodeBlock getCodeBlock() {
+    public Block getCodeBlock() {
         return codeBlock;
     }
 }
