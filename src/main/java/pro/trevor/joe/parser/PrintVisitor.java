@@ -1,15 +1,14 @@
 package pro.trevor.joe.parser;
 
-import pro.trevor.joe.tree.IStatement;
-import pro.trevor.joe.tree.IVisitor;
-import pro.trevor.joe.tree.Symbol;
-import pro.trevor.joe.tree.declaration.*;
-import pro.trevor.joe.tree.expression.*;
-import pro.trevor.joe.tree.expression.binary.*;
-import pro.trevor.joe.tree.expression.literal.*;
-import pro.trevor.joe.tree.expression.unary.BinaryInvertExpression;
-import pro.trevor.joe.tree.expression.unary.LogicalInvertExpression;
-import pro.trevor.joe.tree.statement.*;
+import pro.trevor.joe.parser.tree.IStatement;
+import pro.trevor.joe.parser.tree.IVisitor;
+import pro.trevor.joe.parser.tree.declaration.*;
+import pro.trevor.joe.parser.tree.expression.*;
+import pro.trevor.joe.parser.tree.expression.binary.*;
+import pro.trevor.joe.parser.tree.expression.literal.*;
+import pro.trevor.joe.parser.tree.expression.unary.BinaryInvertExpression;
+import pro.trevor.joe.parser.tree.expression.unary.LogicalInvertExpression;
+import pro.trevor.joe.parser.tree.statement.*;
 
 import java.util.List;
 import java.util.function.Consumer;

@@ -1,7 +1,5 @@
 package pro.trevor.joe.lexer;
 
-import pro.trevor.joe.tree.expression.binary.*;
-
 import java.util.Optional;
 import java.util.Set;
 

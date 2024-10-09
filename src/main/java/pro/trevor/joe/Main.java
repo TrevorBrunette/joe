@@ -5,7 +5,7 @@ import pro.trevor.joe.parser.ParseException;
 import pro.trevor.joe.parser.Parser;
 import pro.trevor.joe.parser.PrintVisitor;
 import pro.trevor.joe.parser.SymbolVisitor;
-import pro.trevor.joe.tree.declaration.TopLevelDeclaration;
+import pro.trevor.joe.parser.tree.declaration.TopLevelDeclaration;
 
 import java.io.FileInputStream;
 import java.io.IOException;
