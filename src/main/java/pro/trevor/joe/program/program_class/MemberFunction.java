@@ -2,9 +2,9 @@ package pro.trevor.joe.program.program_class;
 
 import pro.trevor.joe.program.Access;
 import pro.trevor.joe.program.Parameter;
-import pro.trevor.joe.program.TypeReference;
 import pro.trevor.joe.program.code.Statement;
 import pro.trevor.joe.program.code.statement.BlockStatement;
+import pro.trevor.joe.program.type.TypeReference;
 
 import java.util.List;
 

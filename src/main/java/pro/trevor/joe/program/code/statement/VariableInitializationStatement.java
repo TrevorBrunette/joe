@@ -1,7 +1,7 @@
 package pro.trevor.joe.program.code.statement;
 
-import pro.trevor.joe.program.TypeReference;
 import pro.trevor.joe.program.code.Expression;
+import pro.trevor.joe.program.type.TypeReference;
 
 public class VariableInitializationStatement extends VariableDeclarationStatement {
 

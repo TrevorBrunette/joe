@@ -1,6 +1,6 @@
 package pro.trevor.joe.program.program_enum;
 
-import pro.trevor.joe.program.TypeReference;
+import pro.trevor.joe.program.type.TypeReference;
 
 import java.util.List;
 
