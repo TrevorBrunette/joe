@@ -30,9 +30,4 @@ public abstract class BinaryOperatorExpression extends Expression {
     public int getPriority() {
         return priority;
     }
-
-    @Override
-    public boolean isAssignable() {
-        return false;
-    }
 }

@@ -15,9 +15,4 @@ public abstract class UnaryOperatorExpression extends Expression {
     public Expression getOperand() {
         return operand;
     }
-
-    @Override
-    public boolean isAssignable() {
-        return false;
-    }
 }

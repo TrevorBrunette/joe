@@ -1,4 +1,4 @@
-package pro.trevor.joe.program.program_class.code;
+package pro.trevor.joe.program.code;
 
 public interface Expression extends Statement {
 }

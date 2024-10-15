@@ -1,21 +1,21 @@
-package pro.trevor.joe.program.program_class.code.statement;
+package pro.trevor.joe.program.code.statement;
 
-import pro.trevor.joe.program.program_class.code.Expression;
-import pro.trevor.joe.program.program_class.code.Statement;
+import pro.trevor.joe.program.code.Expression;
+import pro.trevor.joe.program.code.Statement;
 
-public class If implements Statement {
+public class IfStatement implements Statement {
 
     private final Expression condition;
     private final Statement ifTrue;
     private final Statement ifFalse;
 
-    public If(Expression condition, Statement ifTrue, Statement ifFalse) {
+    public IfStatement(Expression condition, Statement ifTrue, Statement ifFalse) {
         this.condition = condition;
         this.ifTrue = ifTrue;
         this.ifFalse = ifFalse;
     }
 
-    public If(Expression condition, Statement ifTrue) {
+    public IfStatement(Expression condition, Statement ifTrue) {
         this(condition, ifTrue, null);
     }
 

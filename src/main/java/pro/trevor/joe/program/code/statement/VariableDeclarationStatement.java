@@ -1,14 +1,14 @@
-package pro.trevor.joe.program.program_class.code.statement;
+package pro.trevor.joe.program.code.statement;
 
 import pro.trevor.joe.program.TypeReference;
-import pro.trevor.joe.program.program_class.code.Statement;
+import pro.trevor.joe.program.code.Statement;
 
-public class VariableDeclaration implements Statement {
+public class VariableDeclarationStatement implements Statement {
 
     private final TypeReference type;
     private final String identifier;
 
-    public VariableDeclaration(TypeReference type, String identifier) {
+    public VariableDeclarationStatement(TypeReference type, String identifier) {
         this.type = type;
         this.identifier = identifier;
     }

@@ -1,6 +1,6 @@
-package pro.trevor.joe.program.program_class.code.expression.literal;
+package pro.trevor.joe.program.code.expression.literal;
 
-import pro.trevor.joe.program.program_class.code.Expression;
+import pro.trevor.joe.program.code.Expression;
 
 public class StringExpression implements Expression {
 

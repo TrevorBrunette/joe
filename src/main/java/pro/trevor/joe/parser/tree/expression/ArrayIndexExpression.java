@@ -20,9 +20,4 @@ public class ArrayIndexExpression extends Expression {
     public Expression getIndex() {
         return index;
     }
-
-    @Override
-    public boolean isAssignable() {
-        return true;
-    }
 }

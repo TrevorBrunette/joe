@@ -1,14 +1,14 @@
-package pro.trevor.joe.program.program_class.code.statement;
+package pro.trevor.joe.program.code.statement;
 
-import pro.trevor.joe.program.program_class.code.Expression;
-import pro.trevor.joe.program.program_class.code.Statement;
+import pro.trevor.joe.program.code.Expression;
+import pro.trevor.joe.program.code.Statement;
 
-public class While implements Statement {
+public class WhileStatement implements Statement {
 
     private final Expression condition;
     private final Statement statement;
 
-    public While(Expression condition, Statement statement) {
+    public WhileStatement(Expression condition, Statement statement) {
         this.condition = condition;
         this.statement = statement;
     }

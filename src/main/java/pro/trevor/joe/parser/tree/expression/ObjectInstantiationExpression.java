@@ -23,9 +23,4 @@ public class ObjectInstantiationExpression extends Expression {
     public List<Expression> getParameters() {
         return parameters;
     }
-
-    @Override
-    public boolean isAssignable() {
-        return false;
-    }
 }

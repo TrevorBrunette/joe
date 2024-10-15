@@ -15,9 +15,4 @@ public class VariableExpression extends Expression {
     public Symbol getIdentifier() {
         return identifier;
     }
-
-    @Override
-    public boolean isAssignable() {
-        return true;
-    }
 }

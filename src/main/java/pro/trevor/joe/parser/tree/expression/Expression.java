@@ -8,6 +8,4 @@ public abstract class Expression extends Node implements IStatement {
     public Expression(Location location) {
         super(location);
     }
-
-    public abstract boolean isAssignable();
 }

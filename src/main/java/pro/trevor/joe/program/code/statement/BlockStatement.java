@@ -1,16 +1,16 @@
-package pro.trevor.joe.program.program_class.code.statement;
+package pro.trevor.joe.program.code.statement;
 
-import pro.trevor.joe.program.program_class.code.Statement;
+import pro.trevor.joe.program.code.Statement;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class Block implements Statement {
+public class BlockStatement implements Statement {
 
     private final List<Statement> statements;
 
-    public Block() {
+    public BlockStatement() {
         statements = new ArrayList<>();
     }
 

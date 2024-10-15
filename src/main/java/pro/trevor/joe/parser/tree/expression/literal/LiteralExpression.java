@@ -7,9 +7,4 @@ public abstract class LiteralExpression extends Expression {
     public LiteralExpression(Location location) {
         super(location);
     }
-
-    @Override
-    public boolean isAssignable() {
-        return false;
-    }
 }

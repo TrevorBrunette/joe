@@ -12,9 +12,4 @@ public class WrappedExpression extends Expression {
     public Expression getExpression() {
         return expression;
     }
-
-    @Override
-    public boolean isAssignable() {
-        return false;
-    }
 }
