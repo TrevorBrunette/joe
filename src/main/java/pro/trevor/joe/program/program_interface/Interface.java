@@ -7,14 +7,14 @@ import java.util.List;
 
 public class Interface extends TopLevelNode {
 
-    private final List<InterfaceMember> members;
+    private final List<FunctionDeclaration> functions;
 
     public Interface(List<TopLevelNode> innerTopLevelNodes) {
         super(innerTopLevelNodes);
-        this.members = new ArrayList<>();
+        this.functions = new ArrayList<>();
     }
 
-    public List<InterfaceMember> getMembers() {
-        return members;
+    public List<FunctionDeclaration> getFunctionDeclarations() {
+        return functions;
     }
 }
