@@ -7,7 +7,7 @@ import pro.trevor.joe.parser.tree.expression.binary.*;
 import pro.trevor.joe.parser.tree.expression.unary.*;
 import pro.trevor.joe.parser.tree.statement.*;
 
-public interface IVisitor {
+public interface AstVisitor {
     // Declarations
     default void visit(Declaration declaration) {
         switch (declaration) {

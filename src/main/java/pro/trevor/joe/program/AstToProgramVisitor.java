@@ -1,6 +1,6 @@
 package pro.trevor.joe.program;
 
-import pro.trevor.joe.parser.tree.IVisitor;
+import pro.trevor.joe.parser.tree.AstVisitor;
 import pro.trevor.joe.parser.tree.declaration.*;
 import pro.trevor.joe.parser.tree.expression.*;
 import pro.trevor.joe.parser.tree.expression.binary.*;
@@ -9,11 +9,11 @@ import pro.trevor.joe.parser.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.parser.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.parser.tree.statement.*;
 
-public class ProgramVisitor implements IVisitor {
+public class AstToProgramVisitor implements AstVisitor {
 
     private Program program;
 
-    public ProgramVisitor() {
+    public AstToProgramVisitor() {
 
     }
 

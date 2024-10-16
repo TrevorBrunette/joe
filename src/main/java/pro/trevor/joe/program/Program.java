@@ -9,8 +9,8 @@ import java.util.List;
 
 public class Program {
 
-    private final List<pro.trevor.joe.program.program_class.Class> classes;
-    private final List<pro.trevor.joe.program.program_enum.Enum> enums;
+    private final List<Class> classes;
+    private final List<Enum> enums;
     private final List<Interface> interfaces;
 
     public Program() {

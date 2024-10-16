@@ -2,10 +2,10 @@ package pro.trevor.joe.program.program_class;
 
 import pro.trevor.joe.program.Access;
 import pro.trevor.joe.program.Parameter;
-import pro.trevor.joe.program.code.Statement;
-import pro.trevor.joe.program.code.statement.BlockStatement;
+import pro.trevor.joe.program.code.Statements;
 import pro.trevor.joe.program.type.TypeReference;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MemberFunction {
@@ -14,7 +14,7 @@ public class MemberFunction {
     private final String identifier;
     private final List<Parameter> parameters;
     private final TypeReference returnType;
-    private final BlockStatement codeBlock;
+    private final Statements.Block codeBlock;
 
     public MemberFunction(Access access, boolean isStatic, String identifier, List<Parameter> parameters, TypeReference returnType) {
         this.access = access;
@@ -22,11 +22,11 @@ public class MemberFunction {
         this.identifier = identifier;
         this.parameters = parameters;
         this.returnType = returnType;
-        this.codeBlock = new BlockStatement();
+        this.codeBlock = new Statements.Block(new ArrayList<>());
     }
 
-    public void addStatement(Statement statement) {
-        codeBlock.addStatement(statement);
+    public void addStatement(Statements.Statement statement) {
+        codeBlock.statements().add(statement);
     }
 
     public Access getAccess() {
@@ -49,7 +49,7 @@ public class MemberFunction {
         return returnType;
     }
 
-    public BlockStatement getCodeBlock() {
+    public Statements.Block getCodeBlock() {
         return codeBlock;
     }
 }

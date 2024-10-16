@@ -12,7 +12,7 @@ import pro.trevor.joe.parser.tree.statement.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SymbolVisitor implements IVisitor {
+public class SymbolVisitor implements AstVisitor {
 
     private final Map<Node, SymbolTable> symbolTable;
     private Node parent;

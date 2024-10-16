@@ -4,5 +4,4 @@ import pro.trevor.joe.program.Access;
 import pro.trevor.joe.program.type.TypeReference;
 
 public record MemberVariable(Access access, boolean isStatic, boolean isFinal, TypeReference type, String identifier) {
-
 }

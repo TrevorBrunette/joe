@@ -1,7 +1,7 @@
 package pro.trevor.joe.parser;
 
 import pro.trevor.joe.parser.tree.IStatement;
-import pro.trevor.joe.parser.tree.IVisitor;
+import pro.trevor.joe.parser.tree.AstVisitor;
 import pro.trevor.joe.parser.tree.declaration.*;
 import pro.trevor.joe.parser.tree.expression.*;
 import pro.trevor.joe.parser.tree.expression.binary.*;
@@ -13,7 +13,7 @@ import pro.trevor.joe.parser.tree.statement.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class PrintVisitor implements IVisitor {
+public class PrintVisitor implements AstVisitor {
 
     private final StringBuilder sb;
 
