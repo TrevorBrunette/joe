@@ -5,7 +5,6 @@ import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.lexer.Token;
 import pro.trevor.joe.lexer.TokenType;
 import pro.trevor.joe.parser.tree.IStatement;
-import pro.trevor.joe.parser.tree.Symbol;
 import pro.trevor.joe.parser.tree.Type;
 import pro.trevor.joe.parser.tree.declaration.*;
 import pro.trevor.joe.parser.tree.expression.*;
@@ -97,7 +96,7 @@ public class Parser {
         Token classToken = expectAndConsume(TokenType.CLASS);
         Token classNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        ClassDeclaration classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), new Symbol(classNameToken.getText()), access, isStatic, isFinal);
+        ClassDeclaration classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), new String(classNameToken.getText()), access, isStatic, isFinal);
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -116,7 +115,7 @@ public class Parser {
         Token interfaceToken = expectAndConsume(TokenType.INTERFACE);
         Token interfaceNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        InterfaceDeclaration interfaceDeclaration = new InterfaceDeclaration(interfaceToken.getBeginLocation(), new Symbol(interfaceNameToken.getText()), access, isStatic, isFinal);
+        InterfaceDeclaration interfaceDeclaration = new InterfaceDeclaration(interfaceToken.getBeginLocation(), new String(interfaceNameToken.getText()), access, isStatic, isFinal);
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -135,7 +134,7 @@ public class Parser {
         Token interfaceToken = expectAndConsume(TokenType.ENUM);
         Token interfaceNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        EnumDeclaration enumDeclaration = new EnumDeclaration(interfaceToken.getBeginLocation(), new Symbol(interfaceNameToken.getText()), access, isStatic, isFinal);
+        EnumDeclaration enumDeclaration = new EnumDeclaration(interfaceToken.getBeginLocation(), new String(interfaceNameToken.getText()), access, isStatic, isFinal);
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -183,7 +182,7 @@ public class Parser {
             Type type = parseType();
             Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
             expectAndConsume(TokenType.SEMICOLON);
-            declaration = new VariableDeclaration(begin.getBeginLocation(), new Symbol(identifierToken.getText()), access, isStatic, isFinal, type);
+            declaration = new VariableDeclaration(begin.getBeginLocation(), new String(identifierToken.getText()), access, isStatic, isFinal, type);
         } else {
             throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN, TokenType.IDENTIFIER}, token);
         }
@@ -246,7 +245,7 @@ public class Parser {
                 }
                 expectAndConsume(TokenType.RPAREN);
             }
-            declaration = new EnumVariantDeclaration(identifier.getBeginLocation(), new Symbol(identifier.getText()), types);
+            declaration = new EnumVariantDeclaration(identifier.getBeginLocation(), new String(identifier.getText()), types);
         } else {
             throw new ParseException(token.getBeginLocation(), TokenType.IDENTIFIER, token);
         }
@@ -276,7 +275,7 @@ public class Parser {
         Type type = parseType();
         Token identifier = expectAndConsume(TokenType.IDENTIFIER);
 
-        return new ParameterDeclaration(begin.getBeginLocation(), type, new Symbol(identifier.getText()));
+        return new ParameterDeclaration(begin.getBeginLocation(), type, new String(identifier.getText()));
     }
 
     private FunctionStubDeclaration parseFunctionStubDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
@@ -289,7 +288,7 @@ public class Parser {
         Type type = parseType();
         expectAndConsumeMaybeEof(TokenType.SEMICOLON);
 
-        return new FunctionStubDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, type, parameters);
+        return new FunctionStubDeclaration(beginning, new String(identifierToken.getText()), access, isStatic, isFinal, type, parameters);
     }
 
     private FunctionDeclaration parseFunctionDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
@@ -308,7 +307,7 @@ public class Parser {
         }
         expectAndConsumeMaybeEof(TokenType.RBRACE);
 
-        return new FunctionDeclaration(beginning, new Symbol(identifierToken.getText()), access, isStatic, isFinal, type, parameters, code);
+        return new FunctionDeclaration(beginning, new String(identifierToken.getText()), access, isStatic, isFinal, type, parameters, code);
     }
 
     private Block parseCodeBlock() throws ParseException {
@@ -383,7 +382,7 @@ public class Parser {
     private VariableDeclarationStatement parseVariableDeclaration() throws ParseException {
         Token begin = token;
         Type type = parseType();
-        Symbol identifier = new Symbol(token.getText());
+        String identifier = new String(token.getText());
         consume();
         if (token.getType() == TokenType.SEMICOLON) {
             VariableDeclarationStatement declaration = new VariableDeclarationStatement(begin.getBeginLocation(), type, identifier);
@@ -540,7 +539,7 @@ public class Parser {
                     }
                 }
                 expectAndConsume(TokenType.RPAREN);
-                expression = new ObjectInstantiationExpression(begin.getBeginLocation(), new Symbol(typeToken.getText()), parameters);
+                expression = new ObjectInstantiationExpression(begin.getBeginLocation(), new String(typeToken.getText()), parameters);
             }
             case CHAR_IMMEDIATE -> {
                 expression = new CharExpression(begin.getBeginLocation(), begin.getText().substring(1, begin.getText().length() - 1));
@@ -555,7 +554,7 @@ public class Parser {
                 expression = new IntegerExpression(begin.getBeginLocation(), begin.getText());
             }
             case IDENTIFIER -> {
-                expression = new VariableExpression(begin.getBeginLocation(), new Symbol(begin.getText()));
+                expression = new VariableExpression(begin.getBeginLocation(), new String(begin.getText()));
             }
             default -> throw new ParseException(begin.getBeginLocation(), String.format("Unexpected start of expression '%s'", begin.getText()));
         }
@@ -577,7 +576,7 @@ public class Parser {
         if (type.getType().isPrimitive()) {
             return new Type(type.getType(), arrayLevel);
         } else {
-            return new Type(new Symbol(type.toString()), arrayLevel);
+            return new Type(new String(type.toString()), arrayLevel);
         }
     }
 

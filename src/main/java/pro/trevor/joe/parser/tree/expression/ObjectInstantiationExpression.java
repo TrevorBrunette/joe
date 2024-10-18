@@ -1,22 +1,21 @@
 package pro.trevor.joe.parser.tree.expression;
 
 import pro.trevor.joe.lexer.Location;
-import pro.trevor.joe.parser.tree.Symbol;
 
 import java.util.List;
 
 public class ObjectInstantiationExpression extends Expression {
 
-    private final Symbol type;
+    private final String type;
     private final List<Expression> parameters;
 
-    public ObjectInstantiationExpression(Location location, Symbol type, List<Expression> parameters) {
+    public ObjectInstantiationExpression(Location location, String type, List<Expression> parameters) {
         super(location);
         this.type = type;
         this.parameters = parameters;
     }
 
-    public Symbol getType() {
+    public String getType() {
         return type;
     }
 

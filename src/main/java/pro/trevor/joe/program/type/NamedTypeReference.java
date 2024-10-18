@@ -22,6 +22,10 @@ public record NamedTypeReference(Path path, String name) implements TypeReferenc
     }
 
     public NamedTypeReference(List<String> path) {
-        this(new Path(path.subList(0, path.size() - 1)), nameFromString(path.getLast()));
+        this(new Path(path.subList(0, path.size() - 1)), path.getLast());
+    }
+
+    public void addSection(String section) {
+        path.getElements().add(section);
     }
 }

@@ -2,18 +2,17 @@ package pro.trevor.joe.parser.tree.declaration;
 
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.parser.tree.Node;
-import pro.trevor.joe.parser.tree.Symbol;
 
 public abstract class Declaration extends Node {
 
-    private final Symbol identifier;
+    private final String identifier;
 
-    public Declaration(Location location, Symbol identifier) {
+    public Declaration(Location location, String identifier) {
         super(location);
         this.identifier = identifier;
     }
 
-    public Symbol getIdentifier() {
+    public String getIdentifier() {
         return identifier;
     }
 }

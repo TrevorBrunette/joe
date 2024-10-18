@@ -1,7 +1,6 @@
 package pro.trevor.joe.parser.tree.declaration;
 
 import pro.trevor.joe.lexer.Location;
-import pro.trevor.joe.parser.tree.Symbol;
 import pro.trevor.joe.parser.tree.Type;
 import pro.trevor.joe.parser.tree.statement.Block;
 
@@ -13,7 +12,7 @@ public class FunctionDeclaration extends TopLevelDeclaration implements ClassMem
     private final List<ParameterDeclaration> arguments;
     private final Block code;
 
-    public FunctionDeclaration(Location location, Symbol identifier, Access access, boolean isStatic, boolean isFinal, Type returnType, List<ParameterDeclaration> arguments, Block code) {
+    public FunctionDeclaration(Location location, String identifier, Access access, boolean isStatic, boolean isFinal, Type returnType, List<ParameterDeclaration> arguments, Block code) {
         super(location, identifier, access, isStatic, isFinal);
         this.returnType = returnType;
         this.arguments = arguments;

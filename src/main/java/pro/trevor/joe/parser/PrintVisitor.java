@@ -47,7 +47,7 @@ public class PrintVisitor implements AstVisitor {
         if (classDeclaration.isFinal()) {
             sb.append("final ");
         }
-        sb.append("class ").append(classDeclaration.getIdentifier().getName()).append('\n');
+        sb.append("class ").append(classDeclaration.getIdentifier()).append('\n');
         printWithIndent("{");
         ++indentFactor;
         for (ClassMember declaration : classDeclaration.getClassMembers()) {
@@ -69,7 +69,7 @@ public class PrintVisitor implements AstVisitor {
         if (enumDeclaration.isFinal()) {
             sb.append("final ");
         }
-        sb.append("enum ").append(enumDeclaration.getIdentifier().getName()).append('\n');
+        sb.append("enum ").append(enumDeclaration.getIdentifier()).append('\n');
         printWithIndent("{");
         ++indentFactor;
 
@@ -89,7 +89,7 @@ public class PrintVisitor implements AstVisitor {
 
     @Override
     public void visit(EnumVariantDeclaration enumVariantDeclaration) {
-        printWithIndent(enumVariantDeclaration.getIdentifier().getName());
+        printWithIndent(enumVariantDeclaration.getIdentifier());
         sb.append('(');
         forEachExceptLast(enumVariantDeclaration.getTypes(), (type) -> {
             sb.append(type.toString()).append(", ");
@@ -102,7 +102,7 @@ public class PrintVisitor implements AstVisitor {
     @Override
     public void visit(FunctionDeclaration functionDeclaration) {
         printWithIndent(functionDeclaration.getAccess().name().toLowerCase());
-        sb.append(' ').append(functionDeclaration.getIdentifier().getName()).append('(');
+        sb.append(' ').append(functionDeclaration.getIdentifier()).append('(');
         forEachExceptLast(functionDeclaration.getArguments(), (argument) -> {
             visit(argument);
             sb.append(", ");
@@ -114,7 +114,7 @@ public class PrintVisitor implements AstVisitor {
     @Override
     public void visit(FunctionStubDeclaration functionStubDeclaration) {
         printWithIndent(functionStubDeclaration.getAccess().name().toLowerCase());
-        sb.append(' ').append(functionStubDeclaration.getIdentifier().getName()).append('(');
+        sb.append(' ').append(functionStubDeclaration.getIdentifier()).append('(');
         forEachExceptLast(functionStubDeclaration.getArguments(), (argument) -> {
             visit(argument);
             sb.append(", ");
@@ -132,7 +132,7 @@ public class PrintVisitor implements AstVisitor {
         if (interfaceDeclaration.isFinal()) {
             sb.append("final ");
         }
-        sb.append("interface ").append(interfaceDeclaration.getIdentifier().getName()).append('\n');
+        sb.append("interface ").append(interfaceDeclaration.getIdentifier()).append('\n');
         printWithIndent("{");
         ++indentFactor;
 
@@ -150,13 +150,13 @@ public class PrintVisitor implements AstVisitor {
     public void visit(VariableDeclaration variableDeclaration) {
         printWithIndent(variableDeclaration.getAccess().name().toLowerCase());
         sb.append(' ').append(variableDeclaration.getType().toString());
-        sb.append(' ').append(variableDeclaration.getIdentifier().toString()).append(";");
+        sb.append(' ').append(variableDeclaration.getIdentifier()).append(";");
     }
 
     @Override
     public void visit(ParameterDeclaration parameterDeclaration) {
         sb.append(parameterDeclaration.getType().toString()).append(' ');
-        sb.append(parameterDeclaration.getIdentifier().getName());
+        sb.append(parameterDeclaration.getIdentifier());
     }
 
     @Override
@@ -207,7 +207,7 @@ public class PrintVisitor implements AstVisitor {
     @Override
     public void visit(VariableInitializationStatement variableInitializationStatement) {
         printWithIndent(variableInitializationStatement.getType().toString());
-        sb.append(' ').append(variableInitializationStatement.getIdentifier().toString()).append(" = ");
+        sb.append(' ').append(variableInitializationStatement.getIdentifier()).append(" = ");
         visit(variableInitializationStatement.getExpression());
         sb.append(";");
     }
@@ -215,7 +215,7 @@ public class PrintVisitor implements AstVisitor {
     @Override
     public void visit(VariableDeclarationStatement variableDeclarationStatement) {
         printWithIndent(variableDeclarationStatement.getType().toString());
-        sb.append(' ').append(variableDeclarationStatement.getIdentifier().toString()).append(";");
+        sb.append(' ').append(variableDeclarationStatement.getIdentifier()).append(";");
     }
 
     @Override
