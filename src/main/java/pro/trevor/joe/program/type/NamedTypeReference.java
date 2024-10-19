@@ -26,6 +26,6 @@ public record NamedTypeReference(Path path, String name) implements TypeReferenc
     }
 
     public void addSection(String section) {
-        path.getElements().add(section);
+        path.elements().add(section);
     }
 }
