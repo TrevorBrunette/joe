@@ -1,16 +1,17 @@
 package pro.trevor.joe.program.program_enum;
 
-import pro.trevor.joe.program.TopLevelNode;
+import pro.trevor.joe.program.TopLevelType;
+import pro.trevor.joe.program.type.NamedTypeReference;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Enum extends TopLevelNode {
+public final class Enum extends TopLevelType {
 
     private final List<Variant> variants;
 
-    public Enum(List<TopLevelNode> innerTopLevelNodes) {
-        super(innerTopLevelNodes);
+    public Enum(NamedTypeReference name) {
+        super(name);
         this.variants = new ArrayList<>();
     }
 

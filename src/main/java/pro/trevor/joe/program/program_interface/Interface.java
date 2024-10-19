@@ -1,16 +1,17 @@
 package pro.trevor.joe.program.program_interface;
 
-import pro.trevor.joe.program.TopLevelNode;
+import pro.trevor.joe.program.TopLevelType;
+import pro.trevor.joe.program.type.NamedTypeReference;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Interface extends TopLevelNode {
+public final class Interface extends TopLevelType {
 
     private final List<FunctionDeclaration> functions;
 
-    public Interface(List<TopLevelNode> innerTopLevelNodes) {
-        super(innerTopLevelNodes);
+    public Interface(NamedTypeReference name) {
+        super(name);
         this.functions = new ArrayList<>();
     }
 

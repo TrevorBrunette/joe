@@ -1,14 +1,13 @@
-package pro.trevor.joe.program.program_class;
+package pro.trevor.joe.program.code;
 
 import pro.trevor.joe.program.Access;
 import pro.trevor.joe.program.Parameter;
-import pro.trevor.joe.program.code.Statements;
 import pro.trevor.joe.program.type.TypeReference;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MemberFunction {
+public class Function {
     private final Access access;
     private final boolean isStatic;
     private final String identifier;
@@ -16,7 +15,7 @@ public class MemberFunction {
     private final TypeReference returnType;
     private final Statements.Block codeBlock;
 
-    public MemberFunction(Access access, boolean isStatic, String identifier, List<Parameter> parameters, TypeReference returnType) {
+    public Function(Access access, boolean isStatic, String identifier, List<Parameter> parameters, TypeReference returnType) {
         this.access = access;
         this.isStatic = isStatic;
         this.identifier = identifier;
