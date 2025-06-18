@@ -9,12 +9,22 @@ import java.util.List;
 
 public class Expressions {
 
-    public sealed interface Expression permits BinaryExpression, LiteralExpression, MiscExpression, UnaryExpression
+    public sealed interface Expression permits AssignableExpression, YieldingExpression
     {}
 
-    public sealed interface BinaryExpression extends Expression permits
+    public sealed interface AssignableExpression extends Expression permits
+            Tuple,
+            Variable,
+            VariableAccess
+    {}
+
+    public record Tuple(List<Expression> members) implements AssignableExpression {}
+    public record Variable(String name) implements AssignableExpression {}
+
+    public sealed interface YieldingExpression extends Expression permits BinaryExpression, LiteralExpression, MiscExpression, ProgramExpression, UnaryExpression {}
+
+    public sealed interface BinaryExpression extends YieldingExpression permits
             Addition,
-            Assignment,
             BinaryAnd,
             BinaryOr,
             BinaryXor,
@@ -37,30 +47,29 @@ public class Expressions {
             VariableAccess
     {}
 
-    public record Addition(Expression left, Expression right) implements BinaryExpression {}
-    public record Assignment(Expression left, Expression right) implements BinaryExpression {}
-    public record BinaryAnd(Expression left, Expression right) implements BinaryExpression {}
-    public record BinaryOr(Expression left, Expression right) implements BinaryExpression {}
-    public record BinaryXor(Expression left, Expression right) implements BinaryExpression {}
-    public record Divide(Expression left, Expression right) implements BinaryExpression {}
-    public record Equals(Expression left, Expression right) implements BinaryExpression {}
-    public record GreaterThan(Expression left, Expression right) implements BinaryExpression {}
-    public record GreaterThanOrEquals(Expression left, Expression right) implements BinaryExpression {}
-    public record LessThan(Expression left, Expression right) implements BinaryExpression {}
-    public record LessThanOrEquals(Expression left, Expression right) implements BinaryExpression {}
-    public record LogicalAnd(Expression left, Expression right) implements BinaryExpression {}
-    public record LogicalOr(Expression left, Expression right) implements BinaryExpression {}
-    public record LogicalXor(Expression left, Expression right) implements BinaryExpression {}
-    public record Modulo(Expression left, Expression right) implements BinaryExpression {}
-    public record Multiply(Expression left, Expression right) implements BinaryExpression {}
-    public record NotEquals(Expression left, Expression right) implements BinaryExpression {}
-    public record ShiftLeft(Expression left, Expression right) implements BinaryExpression {}
-    public record ShiftRight(Expression left, Expression right) implements BinaryExpression {}
-    public record ShiftRightLogical(Expression left, Expression right) implements BinaryExpression {}
-    public record Subtraction(Expression left, Expression right) implements BinaryExpression {}
-    public record VariableAccess(Expression left, Expression right) implements BinaryExpression {}
+    public record Addition(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record BinaryAnd(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record BinaryOr(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record BinaryXor(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record Divide(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record Equals(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record GreaterThan(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record GreaterThanOrEquals(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record LessThan(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record LessThanOrEquals(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record LogicalAnd(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record LogicalOr(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record LogicalXor(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record Modulo(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record Multiply(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record NotEquals(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record ShiftLeft(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record ShiftRight(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record ShiftRightLogical(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record Subtraction(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
+    public record VariableAccess(YieldingExpression left, YieldingExpression right) implements BinaryExpression, AssignableExpression {}
 
-    public sealed interface UnaryExpression extends Expression permits
+    public sealed interface UnaryExpression extends YieldingExpression permits
             BinaryInvert,
             LogicalInvert,
             NumericalNegate
@@ -70,7 +79,7 @@ public class Expressions {
     public record LogicalInvert(Expression operand) implements UnaryExpression {}
     public record NumericalNegate(Expression operand) implements UnaryExpression {}
 
-    public sealed interface LiteralExpression extends Expression permits
+    public sealed interface LiteralExpression extends YieldingExpression permits
             Boolean,
             Char,
             Float,
@@ -88,21 +97,29 @@ public class Expressions {
     public record Super(NamedTypeReference self) implements LiteralExpression {}
     public record This(NamedTypeReference self) implements LiteralExpression {}
 
-    public sealed interface MiscExpression extends Expression permits
+    public sealed interface ProgramExpression extends YieldingExpression permits
+            Block,
+            If,
+            IfElse
+    {}
+
+    public record Block(List<Statements.Statement> statements) implements ProgramExpression {}
+    public record If(Statements.Expression condition, Statements.Statement thenStatement) implements ProgramExpression {}
+    public record IfElse(Statements.Expression condition, Statements.Statement thenStatement, Statements.Statement elseStatement) implements ProgramExpression {}
+
+    public sealed interface MiscExpression extends YieldingExpression permits
             ArrayIndex,
+            Assignment,
             Closure,
             MethodInvocation,
             ObjectInstantiation,
-            Tuple,
-            Variable,
             Wrapped
     {}
 
-    public record ArrayIndex(Expression array, Expression index) implements MiscExpression {}
+    public record ArrayIndex(Expression array, YieldingExpression index) implements MiscExpression {}
+    public record Assignment(Expression left, YieldingExpression right) implements MiscExpression {}
     public record Closure(List<Parameter> parameters, Statements.Statement statement) implements MiscExpression {}
-    public record MethodInvocation(Expression method, List<Expression> arguments) implements MiscExpression {}
-    public record ObjectInstantiation(NamedTypeReference type, List<Expression> arguments) implements MiscExpression {}
-    public record Tuple(List<Expression> members) implements MiscExpression {}
-    public record Variable(String name) implements MiscExpression {}
-    public record Wrapped(Expression expression) implements MiscExpression {}
+    public record MethodInvocation(Expression method, List<YieldingExpression> arguments) implements MiscExpression {}
+    public record ObjectInstantiation(NamedTypeReference type, List<YieldingExpression> arguments) implements MiscExpression {}
+    public record Wrapped(YieldingExpression expression) implements MiscExpression {}
 }

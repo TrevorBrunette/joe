@@ -13,7 +13,7 @@ public class Function {
     private final String identifier;
     private final List<Parameter> parameters;
     private final TypeReference returnType;
-    private final Statements.Block codeBlock;
+    private final Expressions.Block codeBlock;
 
     public Function(Access access, boolean isStatic, String identifier, List<Parameter> parameters, TypeReference returnType) {
         this.access = access;
@@ -21,7 +21,7 @@ public class Function {
         this.identifier = identifier;
         this.parameters = parameters;
         this.returnType = returnType;
-        this.codeBlock = new Statements.Block(new ArrayList<>());
+        this.codeBlock = new Expressions.Block(new ArrayList<>());
     }
 
     public void addStatement(Statements.Statement statement) {
@@ -48,7 +48,7 @@ public class Function {
         return returnType;
     }
 
-    public Statements.Block getCodeBlock() {
+    public Expressions.Block getCodeBlock() {
         return codeBlock;
     }
 }

@@ -6,14 +6,11 @@ import pro.trevor.joe.program.code.InterfaceImplementation;
 import pro.trevor.joe.program.extern.ExternFunction;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class File {
 
     private final String name;
-    private final Map<String, Import> imports;
     private final List<TopLevelType> types;
     private final List<ClassImplementation> classImplementations;
     private final List<InterfaceImplementation> interfaceImplementations;
@@ -22,7 +19,6 @@ public class File {
 
     public File(String name) {
         this.name = name;
-        this.imports = new HashMap<>();
         this.types = new ArrayList<>();
         this.classImplementations = new ArrayList<>();
         this.interfaceImplementations = new ArrayList<>();
@@ -32,10 +28,6 @@ public class File {
 
     public String getName() {
         return name;
-    }
-
-    public Map<String, Import> getImports() {
-        return imports;
     }
 
     public List<TopLevelType> getTypes() {
@@ -56,9 +48,5 @@ public class File {
 
     public List<ExternFunction> getExternFunctions() {
         return externFunctions;
-    }
-
-    public void addImport(Import theImport) {
-        this.imports.put(theImport.getAlias(), theImport);
     }
 }

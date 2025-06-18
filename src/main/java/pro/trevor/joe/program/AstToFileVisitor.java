@@ -9,11 +9,11 @@ import pro.trevor.joe.parser.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.parser.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.parser.tree.statement.*;
 
-public class AstToProgramVisitor implements AstVisitor {
+public class AstToFileVisitor implements AstVisitor {
 
-    private Program program;
+    private TopLevelDeclaration parent;
 
-    public AstToProgramVisitor() {
+    public AstToFileVisitor() {
 
     }
 
