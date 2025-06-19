@@ -144,7 +144,7 @@ public interface AstVisitor {
     void visit(ShiftRightLogicalExpression shiftRightLogicalExpression);
     void visit(SubtractionExpression subtractionExpression);
     void visit(ArrayIndexExpression arrayIndexExpression);
-    void visit(VariableExpression localVariableExpression);
+    void visit(VariableExpression variableExpression);
     void visit(MethodInvocationExpression methodInvocationExpression);
     void visit(ObjectInstantiationExpression objectInstantiationExpression);
     void visit(VariableAccessExpression variableAccessExpression);

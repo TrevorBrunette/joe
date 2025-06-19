@@ -37,9 +37,10 @@ public class Parser {
 
     /*
      * (
-     *   ([public|private|protected] [static] [final] class|enum|interface $identifier { ...* }) |
-     *   (fn $identifier([type $identifier (, type $identifier)*]) { Statement* }) |
-     *   (extern fn $identifier([type $identifier (, type $identifier)*]);)
+     *   [public|private|protected]
+     *     ([final] class)|enum|interface $identifier { ...* }) |
+     *     (fn $identifier([type $identifier (, type $identifier)*]) { Statement* }) |
+     *     (extern fn $identifier([type $identifier (, type $identifier)*]);)
      * )*
      */
     public List<TopLevelDeclaration> parseFile() throws ParseException {
@@ -50,12 +51,16 @@ public class Parser {
     }
 
     /*
-     * [public|private|protected] [static] [final] class|enum|interface|fn $identifier { ...* }
+     * [public|private] [final] class|enum|interface|([extern] fn) $identifier { ...* }
      */
     private TopLevelDeclaration parseTopLevelDeclaration() throws ParseException {
 
         Access access = consumeAccessIfPresent(Access.PRIVATE);
-        boolean isStatic = consumeStaticIfPresent();
+
+        if (access == Access.PROTECTED) {
+            throw new ParseException(token.getBeginLocation(), "Type cannot be declared as protected");
+        }
+
         boolean isFinal = consumeFinalIfPresent();
         boolean isExtern = consumeExternIfPresent();
 
@@ -64,13 +69,16 @@ public class Parser {
                 if (isExtern) {
                     throw new ParseException(token.getBeginLocation(), "Type cannot be declared as extern");
                 }
-                return parseType(access, isStatic, isFinal);
+                return parseType(access, isFinal);
             }
             case FN -> {
+                if (isFinal) {
+                    throw new ParseException(token.getBeginLocation(), "Static functions are inherently final");
+                }
                 if (isExtern) {
-                    return parseFunctionStubDeclaration(access, isStatic, isFinal);
+                    return parseFunctionStubDeclaration(access, true, true, true);
                 } else {
-                    return parseFunctionDeclaration(access, isStatic, isFinal);
+                    return parseFunctionDeclaration(access, true, true);
                 }
             }
             default -> throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN}, token);
@@ -80,11 +88,23 @@ public class Parser {
     /*
      * class|enum|interface $identifier { ...* }
      */
-    private TypeDeclaration parseType(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private TypeDeclaration parseType(Access access, boolean isFinal) throws ParseException {
         return switch (token.getType()) {
-            case CLASS -> parseClass(access, isStatic, isFinal);
-            case ENUM -> parseEnum(access, isStatic, isFinal);
-            case INTERFACE -> parseInterface(access, isStatic, isFinal);
+            case CLASS -> {
+                yield parseClass(access, isFinal);
+            }
+            case ENUM -> {
+                if (isFinal) {
+                    throw new ParseException(token.getBeginLocation(), "Enum cannot be declared as final");
+                }
+                yield parseEnum(access);
+            }
+            case INTERFACE -> {
+                if (isFinal) {
+                    throw new ParseException(token.getBeginLocation(), "Interface cannot be declared as final");
+                }
+                yield parseInterface(access);
+            }
             default -> throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE}, token);
         };
     }
@@ -92,11 +112,11 @@ public class Parser {
     /*
      * class $identifier { MemberDeclaration* }
      */
-    private ClassDeclaration parseClass(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private ClassDeclaration parseClass(Access access, boolean isFinal) throws ParseException {
         Token classToken = expectAndConsume(TokenType.CLASS);
         Token classNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        ClassDeclaration classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), new String(classNameToken.getText()), access, isStatic, isFinal);
+        ClassDeclaration classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), classNameToken.getText(), access, isFinal);
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -111,11 +131,11 @@ public class Parser {
     /*
      * interface $identifier { InterfaceMember* }
      */
-    private InterfaceDeclaration parseInterface(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private InterfaceDeclaration parseInterface(Access access) throws ParseException {
         Token interfaceToken = expectAndConsume(TokenType.INTERFACE);
         Token interfaceNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        InterfaceDeclaration interfaceDeclaration = new InterfaceDeclaration(interfaceToken.getBeginLocation(), new String(interfaceNameToken.getText()), access, isStatic, isFinal);
+        InterfaceDeclaration interfaceDeclaration = new InterfaceDeclaration(interfaceToken.getBeginLocation(), interfaceNameToken.getText(), access);
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -130,11 +150,11 @@ public class Parser {
     /*
      * enum $identifier { EnumMember* }
      */
-    private EnumDeclaration parseEnum(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private EnumDeclaration parseEnum(Access access) throws ParseException {
         Token interfaceToken = expectAndConsume(TokenType.ENUM);
         Token interfaceNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        EnumDeclaration enumDeclaration = new EnumDeclaration(interfaceToken.getBeginLocation(), new String(interfaceNameToken.getText()), access, isStatic, isFinal);
+        EnumDeclaration enumDeclaration = new EnumDeclaration(interfaceToken.getBeginLocation(), interfaceNameToken.getText(), access);
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -156,9 +176,6 @@ public class Parser {
      *   [static]
      *   [final]
      *   (
-     *     class $identifier { ClassMember* } |
-     *     enum $identifier { EnumMember* } |
-     *     interface $identifier { InterfaceMember* } |
      *     fn $identifier([ParameterDeclaration (, ParameterDeclaration)*]) $type { Statement* } |
      *     $type $identifier;
      *   )
@@ -172,9 +189,7 @@ public class Parser {
 
         ClassMember declaration;
 
-        if (token.getType() == TokenType.CLASS || token.getType() == TokenType.ENUM || token.getType() == TokenType.INTERFACE) {
-            declaration = (ClassMember) parseType(access, isStatic, isFinal);
-        } else if (token.getType() == TokenType.FN) {
+        if (token.getType() == TokenType.FN) {
             declaration = parseFunctionDeclaration(access, isStatic, isFinal);
         } else if (token.getType() == TokenType.IDENTIFIER || token.getType().isPrimitive()){
             // Member variable declaration
@@ -182,9 +197,9 @@ public class Parser {
             Type type = parseType();
             Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
             expectAndConsume(TokenType.SEMICOLON);
-            declaration = new VariableDeclaration(begin.getBeginLocation(), new String(identifierToken.getText()), access, isStatic, isFinal, type);
+            declaration = new VariableDeclaration(begin.getBeginLocation(), identifierToken.getText(), access, isStatic, isFinal, type);
         } else {
-            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN, TokenType.IDENTIFIER}, token);
+            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.FN, TokenType.IDENTIFIER}, token);
         }
 
         return declaration;
@@ -193,12 +208,7 @@ public class Parser {
     /*
      * (
      *   [public|private|protected]
-     *   [static]
-     *   [final]
      *   (
-     *     class $identifier { ClassMember* } |
-     *     enum $identifier { EnumMember* } |
-     *     interface $identifier { InterfaceMember* } |
      *     fn $identifier([ParameterDeclaration (, ParameterDeclaration)*]) $type;
      *   )
      * )
@@ -206,17 +216,13 @@ public class Parser {
      */
     private InterfaceMember parseInterfaceMember() throws ParseException {
         Access access = consumeAccessIfPresent(Access.PUBLIC);
-        boolean isStatic = consumeStaticIfPresent();
-        boolean isFinal = consumeFinalIfPresent();
 
         InterfaceMember declaration;
 
-        if (token.getType() == TokenType.CLASS || token.getType() == TokenType.ENUM || token.getType() == TokenType.INTERFACE) {
-            declaration = (InterfaceMember) parseType(access, isStatic, isFinal);
-        } else if (token.getType() == TokenType.FN) {
-            declaration = parseFunctionStubDeclaration(access, isStatic, isFinal);
+        if (token.getType() == TokenType.FN) {
+            declaration = parseFunctionStubDeclaration(access, false, false, false);
         } else {
-            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.CLASS, TokenType.ENUM, TokenType.INTERFACE, TokenType.FN}, token);
+            throw new ParseException(token.getBeginLocation(), new TokenType[]{TokenType.FN}, token);
         }
 
         return declaration;
@@ -245,7 +251,7 @@ public class Parser {
                 }
                 expectAndConsume(TokenType.RPAREN);
             }
-            declaration = new EnumVariantDeclaration(identifier.getBeginLocation(), new String(identifier.getText()), types);
+            declaration = new EnumVariantDeclaration(identifier.getBeginLocation(), identifier.getText(), types);
         } else {
             throw new ParseException(token.getBeginLocation(), TokenType.IDENTIFIER, token);
         }
@@ -275,10 +281,10 @@ public class Parser {
         Type type = parseType();
         Token identifier = expectAndConsume(TokenType.IDENTIFIER);
 
-        return new ParameterDeclaration(begin.getBeginLocation(), type, new String(identifier.getText()));
+        return new ParameterDeclaration(begin.getBeginLocation(), type, identifier.getText());
     }
 
-    private FunctionStubDeclaration parseFunctionStubDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
+    private FunctionStubDeclaration parseFunctionStubDeclaration(Access access, boolean isStatic, boolean isFinal, boolean isExtern) throws ParseException {
         Location beginning = token.getBeginLocation();
         consume();
         Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
@@ -288,7 +294,7 @@ public class Parser {
         Type type = parseType();
         expectAndConsumeMaybeEof(TokenType.SEMICOLON);
 
-        return new FunctionStubDeclaration(beginning, new String(identifierToken.getText()), access, isStatic, isFinal, type, parameters);
+        return new FunctionStubDeclaration(beginning, identifierToken.getText(), access, isStatic, isFinal, isExtern, type, parameters);
     }
 
     private FunctionDeclaration parseFunctionDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
@@ -307,7 +313,7 @@ public class Parser {
         }
         expectAndConsumeMaybeEof(TokenType.RBRACE);
 
-        return new FunctionDeclaration(beginning, new String(identifierToken.getText()), access, isStatic, isFinal, type, parameters, code);
+        return new FunctionDeclaration(beginning, identifierToken.getText(), access, isStatic, isFinal, type, parameters, code);
     }
 
     private Block parseCodeBlock() throws ParseException {
@@ -382,7 +388,7 @@ public class Parser {
     private VariableDeclarationStatement parseVariableDeclaration() throws ParseException {
         Token begin = token;
         Type type = parseType();
-        String identifier = new String(token.getText());
+        String identifier = token.getText();
         consume();
         if (token.getType() == TokenType.SEMICOLON) {
             VariableDeclarationStatement declaration = new VariableDeclarationStatement(begin.getBeginLocation(), type, identifier);
@@ -539,7 +545,7 @@ public class Parser {
                     }
                 }
                 expectAndConsume(TokenType.RPAREN);
-                expression = new ObjectInstantiationExpression(begin.getBeginLocation(), new String(typeToken.getText()), parameters);
+                expression = new ObjectInstantiationExpression(begin.getBeginLocation(), typeToken.getText(), parameters);
             }
             case CHAR_IMMEDIATE -> {
                 expression = new CharExpression(begin.getBeginLocation(), begin.getText().substring(1, begin.getText().length() - 1));
@@ -554,7 +560,7 @@ public class Parser {
                 expression = new IntegerExpression(begin.getBeginLocation(), begin.getText());
             }
             case IDENTIFIER -> {
-                expression = new VariableExpression(begin.getBeginLocation(), new String(begin.getText()));
+                expression = new VariableExpression(begin.getBeginLocation(), begin.getText());
             }
             default -> throw new ParseException(begin.getBeginLocation(), String.format("Unexpected start of expression '%s'", begin.getText()));
         }
@@ -576,7 +582,7 @@ public class Parser {
         if (type.getType().isPrimitive()) {
             return new Type(type.getType(), arrayLevel);
         } else {
-            return new Type(new String(type.toString()), arrayLevel);
+            return new Type(type.toString(), arrayLevel);
         }
     }
 
@@ -600,7 +606,7 @@ public class Parser {
         }
     }
 
-    private boolean consumeStaticIfPresent() throws ParseException{
+    private boolean consumeStaticIfPresent() throws ParseException {
         if (token.getType() == TokenType.STATIC) {
             consume();
             return true;
@@ -609,7 +615,7 @@ public class Parser {
         }
     }
 
-    private boolean consumeFinalIfPresent() throws ParseException{
+    private boolean consumeFinalIfPresent() throws ParseException {
         if (token.getType() == TokenType.FINAL) {
             consume();
             return true;
@@ -618,7 +624,7 @@ public class Parser {
         }
     }
 
-    private boolean consumeExternIfPresent() throws ParseException{
+    private boolean consumeExternIfPresent() throws ParseException {
         if (token.getType() == TokenType.EXTERN) {
             consume();
             return true;
@@ -677,14 +683,14 @@ public class Parser {
             case SHIFT_LEFT, SHIFT_RIGHT, SHIFT_RIGHT_LOGICAL -> 9;
             case ADD, SUB -> 10;
             case MUL, DIV, MOD -> 11;
-            case PERIOD -> 12;
+            case PERIOD -> 0;
             default -> -1;
         };
     }
 
     private static Associativity associativity(TokenType tokenType) {
         return switch (tokenType) {
-            case ASSIGN -> Associativity.RIGHT_TO_LEFT;
+            case ASSIGN-> Associativity.RIGHT_TO_LEFT;
             default -> Associativity.LEFT_TO_RIGHT;
         };
     }

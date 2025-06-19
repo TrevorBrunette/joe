@@ -5,13 +5,15 @@ import pro.trevor.joe.lexer.Location;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassDeclaration extends TypeDeclaration implements ClassMember, EnumMember, InterfaceMember {
+public class ClassDeclaration extends TypeDeclaration {
 
     private final List<ClassMember> classMembers;
+    private final boolean isFinal;
 
-    public ClassDeclaration(Location location, String symbol, Access access, boolean isStatic, boolean isFinal) {
-        super(location, symbol, access, isStatic, isFinal);
+    public ClassDeclaration(Location location, String symbol, Access access, boolean isFinal) {
+        super(location, symbol, access);
         this.classMembers = new ArrayList<>();
+        this.isFinal = isFinal;
     }
 
     public void addMemberDeclaration(ClassMember classMember) {
@@ -20,5 +22,9 @@ public class ClassDeclaration extends TypeDeclaration implements ClassMember, En
 
     public List<ClassMember> getClassMembers() {
         return classMembers;
+    }
+
+    public boolean isFinal() {
+        return isFinal;
     }
 }

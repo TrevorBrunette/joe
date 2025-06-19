@@ -4,25 +4,13 @@ import pro.trevor.joe.lexer.Location;
 
 public abstract class AccessDeclaration extends Declaration {
     private final Access access;
-    private final boolean isStatic;
-    private final boolean isFinal;
 
-    public AccessDeclaration(Location location, String identifier, Access access, boolean isStatic, boolean isFinal) {
+    public AccessDeclaration(Location location, String identifier, Access access) {
         super(location, identifier);
         this.access = access;
-        this.isStatic = isStatic;
-        this.isFinal = isFinal;
     }
 
     public Access getAccess() {
         return access;
-    }
-
-    public boolean isStatic() {
-        return isStatic;
-    }
-
-    public boolean isFinal() {
-        return isFinal;
     }
 }

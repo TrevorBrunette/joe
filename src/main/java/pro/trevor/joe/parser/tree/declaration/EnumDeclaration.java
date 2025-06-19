@@ -5,12 +5,12 @@ import pro.trevor.joe.lexer.Location;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EnumDeclaration extends TypeDeclaration implements ClassMember, EnumMember, InterfaceMember{
+public class EnumDeclaration extends TypeDeclaration {
 
     private final List<EnumMember> enumMembers;
 
-    public EnumDeclaration(Location location, String identifier, Access access, boolean isStatic, boolean isFinal) {
-        super(location, identifier, access, isStatic, isFinal);
+    public EnumDeclaration(Location location, String identifier, Access access) {
+        super(location, identifier, access);
         this.enumMembers = new ArrayList<>();
     }
 

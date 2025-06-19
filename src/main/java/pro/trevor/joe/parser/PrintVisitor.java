@@ -41,9 +41,6 @@ public class PrintVisitor implements AstVisitor {
     public void visit(ClassDeclaration classDeclaration) {
         printWithIndent(classDeclaration.getAccess().name().toLowerCase());
         sb.append(' ');
-        if (classDeclaration.isStatic()) {
-            sb.append("static ");
-        }
         if (classDeclaration.isFinal()) {
             sb.append("final ");
         }
@@ -63,12 +60,6 @@ public class PrintVisitor implements AstVisitor {
     public void visit(EnumDeclaration enumDeclaration) {
         printWithIndent(enumDeclaration.getAccess().name().toLowerCase());
         sb.append(' ');
-        if (enumDeclaration.isStatic()) {
-            sb.append("static ");
-        }
-        if (enumDeclaration.isFinal()) {
-            sb.append("final ");
-        }
         sb.append("enum ").append(enumDeclaration.getIdentifier()).append('\n');
         printWithIndent("{");
         ++indentFactor;
@@ -113,7 +104,11 @@ public class PrintVisitor implements AstVisitor {
 
     @Override
     public void visit(FunctionStubDeclaration functionStubDeclaration) {
-        printWithIndent(functionStubDeclaration.getAccess().name().toLowerCase());
+        printWithIndent("");
+        if (functionStubDeclaration.isExtern()) {
+            sb.append("extern ");
+        }
+        sb.append(functionStubDeclaration.getAccess().name().toLowerCase());
         sb.append(' ').append(functionStubDeclaration.getIdentifier()).append('(');
         forEachExceptLast(functionStubDeclaration.getArguments(), (argument) -> {
             visit(argument);
@@ -126,12 +121,6 @@ public class PrintVisitor implements AstVisitor {
     public void visit(InterfaceDeclaration interfaceDeclaration) {
         printWithIndent(interfaceDeclaration.getAccess().name().toLowerCase());
         sb.append(' ');
-        if (interfaceDeclaration.isStatic()) {
-            sb.append("static ");
-        }
-        if (interfaceDeclaration.isFinal()) {
-            sb.append("final ");
-        }
         sb.append("interface ").append(interfaceDeclaration.getIdentifier()).append('\n');
         printWithIndent("{");
         ++indentFactor;
@@ -477,8 +466,8 @@ public class PrintVisitor implements AstVisitor {
     }
 
     @Override
-    public void visit(VariableExpression localVariableExpression) {
-        sb.append(localVariableExpression.getIdentifier());
+    public void visit(VariableExpression variableExpression) {
+        sb.append(variableExpression.getIdentifier());
     }
 
     @Override
@@ -501,7 +490,7 @@ public class PrintVisitor implements AstVisitor {
     @Override
     public void visit(ObjectInstantiationExpression objectInstantiationExpression) {
         sb.append('(');
-        sb.append("new ").append(objectInstantiationExpression.getType().toString()).append("(");
+        sb.append("new ").append(objectInstantiationExpression.getType()).append("(");
         List<Expression> parameters = objectInstantiationExpression.getParameters();
         if (!parameters.isEmpty()) {
             visit(parameters.getFirst());

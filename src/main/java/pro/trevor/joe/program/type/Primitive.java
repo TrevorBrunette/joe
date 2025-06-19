@@ -1,6 +1,7 @@
 package pro.trevor.joe.program.type;
 
 public enum Primitive {
+    VOID,
     BOOL,
     U8,
     U16,

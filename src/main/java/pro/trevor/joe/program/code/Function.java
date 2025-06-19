@@ -1,6 +1,6 @@
 package pro.trevor.joe.program.code;
 
-import pro.trevor.joe.program.Access;
+import pro.trevor.joe.parser.tree.declaration.Access;
 import pro.trevor.joe.program.Parameter;
 import pro.trevor.joe.program.type.TypeReference;
 

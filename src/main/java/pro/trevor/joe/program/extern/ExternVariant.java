@@ -14,6 +14,7 @@ public enum ExternVariant {
                 switch (type) {
                     case PrimitiveTypeReference primitiveReference -> {
                         return switch (primitiveReference.primitive()) {
+                            case VOID -> "void";
                             case BOOL -> "bool";
                             case U8 -> "uint8_t";
                             case U16 -> "uint16_t";

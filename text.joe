@@ -1,19 +1,4 @@
 public class Main {
-    public class InnerClass {
-        protected u32 myInt;
-    }
-
-    private enum MyEnum {
-        THIS,
-        IS(),
-        AN(u32),
-        ENUM(u32, InnerClass)
-    }
-
-    private interface MyInterface {
-        fn myFunction(MyType myParam) myReturnType;
-    }
-
     fn function(u32 x, i8 y) u32 {
         return x + y;
     }
@@ -38,7 +23,18 @@ public class Main {
     }
 }
 
-extern fn printf(char[] str) void;
+private enum MyEnum {
+    THIS,
+    IS(),
+    AN(u32),
+    ENUM(u32, InnerClass)
+}
+
+private interface MyInterface {
+    fn myFunction(MyType myParam) myReturnType;
+}
+
+extern fn printf(u8[] str) void;
 
 fn printHello() void {
     printf("Hello World!");

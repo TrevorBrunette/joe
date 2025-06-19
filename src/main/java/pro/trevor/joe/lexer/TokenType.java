@@ -15,7 +15,6 @@ public enum TokenType {
     FLOAT_IMMEDIATE("FLOAT_IMMEDIATE"),
 
     BOOL("bool"),
-    CHAR("char"),
     F32("f32"),
     F64("f64"),
     I8("i8"),
@@ -116,7 +115,7 @@ public enum TokenType {
     COLON(":"),
     QUESTION("?");
 
-    private static final TokenType[] PRIMITIVES = {VOID, BOOL, CHAR, F32, F64, I8, I16, I32, I64, U8, U16, U32, U64};
+    private static final TokenType[] PRIMITIVES = {VOID, BOOL, F32, F64, I8, I16, I32, I64, U8, U16, U32, U64};
     private static final TokenType[] KEYWORDS = {
             ABSTRACT, ASSERT, BREAK, CASE, CATCH, CLASS, CONST, CONTINUE, DEFAULT, DO, ELSE, ENUM, EXTENDS, EXTERN, FALSE,
             FINAL, FN, FOR, IF, IMPL, IMPORT, INSTANCEOF, INTERFACE, NEW, NULL, PACKAGE, PRIVATE, PROTECTED, PUBLIC,

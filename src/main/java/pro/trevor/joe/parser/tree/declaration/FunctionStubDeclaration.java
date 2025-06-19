@@ -7,13 +7,31 @@ import java.util.List;
 
 public class FunctionStubDeclaration extends TopLevelDeclaration implements InterfaceMember {
 
+    private final boolean isStatic;
+    private final boolean isFinal;
+    private final boolean isExtern;
     private final Type returnType;
     private final List<ParameterDeclaration> arguments;
 
-    public FunctionStubDeclaration(Location location, String identifier, Access access, boolean isStatic, boolean isFinal, Type returnType, List<ParameterDeclaration> arguments) {
-        super(location, identifier, access, isStatic, isFinal);
+    public FunctionStubDeclaration(Location location, String identifier, Access access, boolean isStatic, boolean isFinal, boolean isExtern, Type returnType, List<ParameterDeclaration> arguments) {
+        super(location, identifier, access);
+        this.isStatic = isStatic;
+        this.isFinal = isFinal;
+        this.isExtern = isExtern;
         this.returnType = returnType;
         this.arguments = arguments;
+    }
+
+    public boolean isStatic() {
+        return isStatic;
+    }
+
+    public boolean isFinal() {
+        return isFinal;
+    }
+
+    public boolean isExtern() {
+        return isExtern;
     }
 
     public Type getReturnType() {

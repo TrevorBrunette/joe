@@ -3,6 +3,7 @@ package pro.trevor.joe.parser.tree.expression.binary;
 import pro.trevor.joe.lexer.Location;
 import pro.trevor.joe.parser.tree.expression.Associativity;
 import pro.trevor.joe.parser.tree.expression.Expression;
+import pro.trevor.joe.parser.tree.expression.VariableExpression;
 
 public class VariableAccessExpression extends BinaryOperatorExpression {
 

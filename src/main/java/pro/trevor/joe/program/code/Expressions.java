@@ -19,7 +19,7 @@ public class Expressions {
     {}
 
     public record Tuple(List<Expression> members) implements AssignableExpression {}
-    public record Variable(String name) implements AssignableExpression {}
+    public record Variable(java.lang.String name) implements AssignableExpression {}
 
     public sealed interface YieldingExpression extends Expression permits BinaryExpression, LiteralExpression, MiscExpression, ProgramExpression, UnaryExpression {}
 
@@ -67,7 +67,7 @@ public class Expressions {
     public record ShiftRight(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record ShiftRightLogical(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record Subtraction(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
-    public record VariableAccess(YieldingExpression left, YieldingExpression right) implements BinaryExpression, AssignableExpression {}
+    public record VariableAccess(YieldingExpression left, Variable right) implements BinaryExpression, AssignableExpression {}
 
     public sealed interface UnaryExpression extends YieldingExpression permits
             BinaryInvert,
@@ -86,16 +86,18 @@ public class Expressions {
             Integer,
             String,
             Super,
-            This
+            This,
+            Null
     {}
 
     public record Boolean(boolean value) implements LiteralExpression {}
     public record Char(char value) implements LiteralExpression {}
     public record Float(BigDecimal value) implements LiteralExpression {}
     public record Integer(BigInteger value) implements LiteralExpression {}
-    public record String(String value) implements LiteralExpression {}
+    public record String(java.lang.String value) implements LiteralExpression {}
     public record Super(NamedTypeReference self) implements LiteralExpression {}
     public record This(NamedTypeReference self) implements LiteralExpression {}
+    public record Null() implements LiteralExpression {}
 
     public sealed interface ProgramExpression extends YieldingExpression permits
             Block,
@@ -104,8 +106,8 @@ public class Expressions {
     {}
 
     public record Block(List<Statements.Statement> statements) implements ProgramExpression {}
-    public record If(Statements.Expression condition, Statements.Statement thenStatement) implements ProgramExpression {}
-    public record IfElse(Statements.Expression condition, Statements.Statement thenStatement, Statements.Statement elseStatement) implements ProgramExpression {}
+    public record If(Expressions.Expression condition, Statements.Statement thenStatement) implements ProgramExpression {}
+    public record IfElse(Expressions.Expression condition, Statements.Statement thenStatement, Statements.Statement elseStatement) implements ProgramExpression {}
 
     public sealed interface MiscExpression extends YieldingExpression permits
             ArrayIndex,

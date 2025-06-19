@@ -5,12 +5,12 @@ import pro.trevor.joe.lexer.Location;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InterfaceDeclaration extends TypeDeclaration  implements ClassMember, InterfaceMember {
+public class InterfaceDeclaration extends TypeDeclaration {
 
     private final List<InterfaceMember> interfaceMembers;
 
-    public InterfaceDeclaration(Location location, String symbol, Access access, boolean isStatic, boolean isFinal) {
-        super(location, symbol, access, isStatic, isFinal);
+    public InterfaceDeclaration(Location location, String symbol, Access access) {
+        super(location, symbol, access);
         this.interfaceMembers = new ArrayList<>();
     }
 

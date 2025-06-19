@@ -34,8 +34,13 @@ public class Type {
         this.arrayLevels = arrayLevels;
     }
 
+
     public TokenType getType() {
         return type;
+    }
+
+    public int getArrayLevels() {
+        return arrayLevels;
     }
 
     public String getString() {
