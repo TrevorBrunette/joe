@@ -11,6 +11,7 @@ import pro.trevor.joe.parser.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.parser.tree.statement.*;
 import pro.trevor.joe.program.code.Expressions;
 import pro.trevor.joe.program.code.Function;
+import pro.trevor.joe.program.code.InterfaceImplementation;
 import pro.trevor.joe.program.code.Statements;
 import pro.trevor.joe.program.extern.ExternFunction;
 import pro.trevor.joe.program.extern.ExternVariant;
@@ -30,17 +31,19 @@ import java.util.List;
 public class AstToFileVisitor implements AstVisitor {
 
     private final File file;
-    private TopLevelDeclaration currentDeclaration;
     private TopLevelType currentType;
     private Expressions.Block currentBlock;
     private Expressions.Expression returnExpression;
-    private Statements.Statement currentStatement;
+    private Statements.Statement returnStatement;
+    private InterfaceImplementation currentImpl;
 
     public AstToFileVisitor(String fileName) {
         this.file = new File(fileName);
-        this.currentDeclaration = null;
+        this.currentImpl = null;
         this.currentType = null;
         this.currentBlock = null;
+        this.returnExpression = null;
+        this.returnStatement = null;
     }
 
     public File getFile() {
@@ -48,22 +51,26 @@ public class AstToFileVisitor implements AstVisitor {
     }
 
     @Override
+    public void visit(ImplDeclaration implDeclaration) {
+        this.currentImpl = new InterfaceImplementation(new NamedTypeReference(implDeclaration.getInterfaceIdentifier()), new NamedTypeReference(implDeclaration.getClassIdentifier()));
+        implDeclaration.getDeclarations().forEach(this::visit);
+        file.getInterfaceImplementations().add(this.currentImpl);
+        this.currentImpl = null;
+    }
+
+    @Override
     public void visit(ClassDeclaration classDeclaration) {
-        this.currentDeclaration = classDeclaration;
-        this.currentType = new Class(new NamedTypeReference(classDeclaration.getIdentifier()));
+        this.currentType = new Class(new NamedTypeReference(classDeclaration.getIdentifier()), new NamedTypeReference(classDeclaration.getSuperClassName()));
         classDeclaration.getClassMembers().forEach(this::visit);
         file.getTypes().add(this.currentType);
-        this.currentDeclaration = null;
         this.currentType = null;
     }
 
     @Override
     public void visit(EnumDeclaration enumDeclaration) {
-        this.currentDeclaration = enumDeclaration;
         this.currentType = new Enum(new NamedTypeReference(enumDeclaration.getIdentifier()));
         enumDeclaration.getEnumMembers().forEach(this::visit);
         file.getTypes().add(this.currentType);
-        this.currentDeclaration = null;
         this.currentType = null;
     }
 
@@ -80,10 +87,12 @@ public class AstToFileVisitor implements AstVisitor {
         TypeReference returnType = TypeReference.fromType(functionDeclaration.getReturnType());
         List<Parameter> parameters = functionDeclaration.getArguments().stream().map(arg -> new Parameter(arg.getIdentifier(), TypeReference.fromType(arg.getType()))).toList();
         Function function = new Function(functionDeclaration.getAccess(), functionDeclaration.isStatic(), functionDeclaration.getIdentifier(), parameters, returnType);
-        if (parent == null) {
-            file.getFunctions().add(function);
-        } else {
+        if (parent != null) {
             parent.getImplementation().functions().add(function);
+        } else if (currentImpl != null) {
+            this.currentImpl.addFunction(function);
+        } else {
+            file.getFunctions().add(function);
         }
     }
 
@@ -105,11 +114,9 @@ public class AstToFileVisitor implements AstVisitor {
 
     @Override
     public void visit(InterfaceDeclaration interfaceDeclaration) {
-        this.currentDeclaration = interfaceDeclaration;
         this.currentType = new Interface(new NamedTypeReference(interfaceDeclaration.getIdentifier()));
         interfaceDeclaration.getInterfaceMembers().forEach(this::visit);
         file.getTypes().add(this.currentType);
-        this.currentDeclaration = null;
         this.currentType = null;
     }
 
@@ -130,7 +137,7 @@ public class AstToFileVisitor implements AstVisitor {
         this.currentBlock = new Expressions.Block(new ArrayList<>());
         for (IStatement statement : block.getStatements()) {
             this.visit(statement);
-            this.currentBlock.statements().add(currentStatement);
+            this.currentBlock.statements().add(returnStatement);
         }
         this.currentBlock = previous;
     }
@@ -143,7 +150,7 @@ public class AstToFileVisitor implements AstVisitor {
     @Override
     public void visit(ExpressionStatement expressionStatement) {
         this.visit(expressionStatement.getExpression());
-        this.currentStatement = new Statements.Expression(returnExpression);
+        this.returnStatement = new Statements.Expression(returnExpression);
     }
 
     @Override
@@ -151,26 +158,26 @@ public class AstToFileVisitor implements AstVisitor {
         this.visit(ifStatement.getCondition());
         Expressions.Expression condition = returnExpression;
         this.visit(ifStatement.getIfTrue());
-        Statements.Statement statement = currentStatement;
+        Statements.Statement statement = returnStatement;
         this.returnExpression = new Expressions.If(condition, statement);
     }
 
     @Override
     public void visit(ReturnStatement returnStatement) {
         this.visit(returnStatement.getToReturn());
-        this.currentStatement = new Statements.Return(returnExpression);
+        this.returnStatement = new Statements.Return(returnExpression);
     }
 
     @Override
     public void visit(VariableInitializationStatement variableInitializationStatement) {
         this.visit(variableInitializationStatement.getExpression());
         Expressions.Expression expression = returnExpression;
-        this.currentStatement = new Statements.VariableInitialization(TypeReference.fromType(variableInitializationStatement.getType()), variableInitializationStatement.getIdentifier(), expression);
+        this.returnStatement = new Statements.VariableInitialization(TypeReference.fromType(variableInitializationStatement.getType()), variableInitializationStatement.getIdentifier(), expression);
     }
 
     @Override
     public void visit(VariableDeclarationStatement variableDeclarationStatement) {
-        this.currentStatement = new Statements.VariableDeclaration(TypeReference.fromType(variableDeclarationStatement.getType()), variableDeclarationStatement.getIdentifier());
+        this.returnStatement = new Statements.VariableDeclaration(TypeReference.fromType(variableDeclarationStatement.getType()), variableDeclarationStatement.getIdentifier());
     }
 
     @Override
@@ -178,8 +185,8 @@ public class AstToFileVisitor implements AstVisitor {
         this.visit(whileStatement.getCondition());
         Expressions.Expression condition = returnExpression;
         this.visit(whileStatement.getStatement());
-        Statements.Statement statement = currentStatement;
-        this.currentStatement = new Statements.While(condition, statement);
+        Statements.Statement statement = returnStatement;
+        this.returnStatement = new Statements.While(condition, statement);
     }
 
     @Override

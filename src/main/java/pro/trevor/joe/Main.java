@@ -6,7 +6,7 @@ import pro.trevor.joe.parser.Parser;
 import pro.trevor.joe.parser.PrintVisitor;
 import pro.trevor.joe.parser.tree.declaration.TopLevelDeclaration;
 import pro.trevor.joe.program.AstToFileVisitor;
-import pro.trevor.joe.program.extern.ExternGenerationException;
+import pro.trevor.joe.program.File;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) throws ParseException, ExternGenerationException {
+    public static void main(String[] args) throws ParseException {
         String text = "";
         try (FileInputStream fis = new FileInputStream("text.joe")) {
             text = new String(fis.readAllBytes());
@@ -29,9 +29,13 @@ public class Main {
             toFileVisitor.visit(declaration);
             System.out.println(printVisitor);
         }
-        toFileVisitor.getFile().getTypes().forEach(System.out::println);
-        toFileVisitor.getFile().getFunctions().forEach(System.out::println);
-        toFileVisitor.getFile().getExternFunctions().forEach(System.out::println);
+
+        File result = toFileVisitor.getFile();
+
+        result.getTypes().forEach(System.out::println);
+        result.getInterfaceImplementations().forEach(System.out::println);
+        result.getFunctions().forEach(System.out::println);
+        result.getExternFunctions().forEach(System.out::println);
     }
 
 }

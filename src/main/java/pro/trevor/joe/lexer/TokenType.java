@@ -25,17 +25,13 @@ public enum TokenType {
     U16("u16"),
     U32("u32"),
     U64("u64"),
+    VOID("void"),
 
-    ABSTRACT("abstract"),
-    ASSERT("assert"),
     BREAK("break"),
     CASE("case"),
-    CATCH("catch"),
     CLASS("class"),
-    CONST("const"),
     CONTINUE("continue"),
     DEFAULT("default"),
-    DO("do"),
     ELSE("else"),
     ENUM("enum"),
     EXTENDS("extends"),
@@ -45,7 +41,7 @@ public enum TokenType {
     FN("fn"),
     FOR("for"),
     IF("if"),
-    IMPL("implements"),
+    IMPL("impl"),
     IMPORT("import"),
     INSTANCEOF("instanceof"),
     INTERFACE("interface"),
@@ -61,9 +57,6 @@ public enum TokenType {
     SWITCH("switch"),
     THIS("this"),
     TRUE("true"),
-    TRY("try"),
-    VAR("var"),
-    VOID("void"),
     WHILE("while"),
 
     LPAREN("("),
@@ -117,9 +110,9 @@ public enum TokenType {
 
     private static final TokenType[] PRIMITIVES = {VOID, BOOL, F32, F64, I8, I16, I32, I64, U8, U16, U32, U64};
     private static final TokenType[] KEYWORDS = {
-            ABSTRACT, ASSERT, BREAK, CASE, CATCH, CLASS, CONST, CONTINUE, DEFAULT, DO, ELSE, ENUM, EXTENDS, EXTERN, FALSE,
+            BREAK, CASE, CLASS, CONTINUE, DEFAULT, ELSE, ENUM, EXTENDS, EXTERN, FALSE,
             FINAL, FN, FOR, IF, IMPL, IMPORT, INSTANCEOF, INTERFACE, NEW, NULL, PACKAGE, PRIVATE, PROTECTED, PUBLIC,
-            RETURN, STATIC, SUPER, SWITCH, THIS, TRUE, TRY, VAR, VOID, WHILE
+            RETURN, STATIC, SUPER, SWITCH, THIS, TRUE, VOID, WHILE
     };
     private static final TokenType[] BINARY_OPERATORS = {
             PERIOD, MUL, DIV, MOD, ADD, SUB, SHIFT_LEFT, SHIFT_RIGHT, SHIFT_RIGHT_LOGICAL, LESS_THAN, LESS_EQUAL, GREATER_THAN,

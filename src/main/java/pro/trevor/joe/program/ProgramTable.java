@@ -39,14 +39,14 @@ public class ProgramTable {
             }
 
             for (InterfaceImplementation interfaceImplementation : file.getInterfaceImplementations()) {
-                TopLevelType type = this.types.get(interfaceImplementation.getType());
+                TopLevelType type = this.types.get(interfaceImplementation.getInterfaceType());
                 if (type == null) {
-                    throw new Error("Missing type " + interfaceImplementation.getType().toString());
+                    throw new Error("Missing type " + interfaceImplementation.getInterfaceType().toString());
                 }
                 if (type instanceof Class clazz) {
                     clazz.addInterfaceImplementation(interfaceImplementation);
                 } else {
-                    throw new Error("Implementation block defined for non-class type: " + interfaceImplementation.getType().toString());
+                    throw new Error("Implementation block defined for non-class type: " + interfaceImplementation.getInterfaceType().toString());
                 }
             }
         }

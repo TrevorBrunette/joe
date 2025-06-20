@@ -10,9 +10,9 @@ import java.util.List;
 
 public final class Class extends TopLevelType {
 
-    public static final Class UNIVERSAL_PARENT = createUniversalParent();
     private static final String UNIVERSAL_PARENT_CLASS_NAME = "Object";
     private static final NamedTypeReference UNIVERSAL_PARENT_TYPE_REFERENCE = new NamedTypeReference("joe::lang::" + UNIVERSAL_PARENT_CLASS_NAME);
+    public static final Class UNIVERSAL_PARENT = createUniversalParent();
 
     private final NamedTypeReference superclass;
     private final List<MemberVariable> variables;
@@ -32,6 +32,15 @@ public final class Class extends TopLevelType {
         this.superclass = parent;
         this.variables = new ArrayList<>();
         this.implementation = new ClassImplementation(name, new ArrayList<>());
+        this.interfaceImplementations = new ArrayList<>();
+    }
+
+    // Universal parent type instantiation
+    private Class() {
+        super(UNIVERSAL_PARENT_TYPE_REFERENCE);
+        this.superclass = null;
+        this.variables = new ArrayList<>();;
+        this.implementation = new ClassImplementation(super.getName(), new ArrayList<>());
         this.interfaceImplementations = new ArrayList<>();
     }
 
@@ -60,6 +69,6 @@ public final class Class extends TopLevelType {
     }
 
     private static Class createUniversalParent() {
-        return new Class(UNIVERSAL_PARENT_TYPE_REFERENCE, null);
+        return new Class();
     }
 }

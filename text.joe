@@ -1,4 +1,6 @@
 public class Main {
+    static u8 instances;
+
     fn function(u32 x, i8 y) u32 {
         return x + y;
     }
@@ -23,6 +25,8 @@ public class Main {
     }
 }
 
+public class ExtMain extends Main {}
+
 private enum MyEnum {
     THIS,
     IS(),
@@ -32,6 +36,12 @@ private enum MyEnum {
 
 private interface MyInterface {
     fn myFunction(MyType myParam) myReturnType;
+}
+
+impl MyInterface for MyClass {
+    fn myFunction(MyType myParam) myReturnType {
+        return null;
+    }
 }
 
 extern fn printf(u8[] str) void;

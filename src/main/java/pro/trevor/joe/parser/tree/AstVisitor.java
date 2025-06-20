@@ -11,6 +11,7 @@ public interface AstVisitor {
     // Declarations
     default void visit(Declaration declaration) {
         switch (declaration) {
+            case ImplDeclaration x -> visit(x);
             case ClassDeclaration x -> visit(x);
             case EnumDeclaration x -> visit(x);
             case EnumVariantDeclaration x -> visit(x);
@@ -31,6 +32,7 @@ public interface AstVisitor {
         }
     }
 
+    void visit(ImplDeclaration implDeclaration);
     void visit(ClassDeclaration classDeclaration);
     void visit(EnumDeclaration enumDeclaration);
     void visit(EnumVariantDeclaration enumVariantDeclaration);

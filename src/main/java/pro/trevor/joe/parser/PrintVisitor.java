@@ -38,13 +38,25 @@ public class PrintVisitor implements AstVisitor {
     }
 
     @Override
+    public void visit(ImplDeclaration implDeclaration) {
+        sb.append("impl ").append(implDeclaration.getInterfaceIdentifier()).append(" for ").append(implDeclaration.getClassIdentifier()).append('\n');
+        sb.append("{\n");
+        ++indentFactor;
+        for (FunctionDeclaration functionDeclaration : implDeclaration.getDeclarations()) {
+            visit(functionDeclaration);
+        }
+        --indentFactor;
+        sb.append("\n}\n");
+    }
+
+    @Override
     public void visit(ClassDeclaration classDeclaration) {
         printWithIndent(classDeclaration.getAccess().name().toLowerCase());
         sb.append(' ');
         if (classDeclaration.isFinal()) {
             sb.append("final ");
         }
-        sb.append("class ").append(classDeclaration.getIdentifier()).append('\n');
+        sb.append("class ").append(classDeclaration.getIdentifier()).append(" extends ").append(classDeclaration.getSuperClassName()).append('\n');
         printWithIndent("{");
         ++indentFactor;
         for (ClassMember declaration : classDeclaration.getClassMembers()) {

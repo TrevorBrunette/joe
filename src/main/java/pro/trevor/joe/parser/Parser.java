@@ -9,10 +9,7 @@ import pro.trevor.joe.parser.tree.Type;
 import pro.trevor.joe.parser.tree.declaration.*;
 import pro.trevor.joe.parser.tree.expression.*;
 import pro.trevor.joe.parser.tree.expression.binary.*;
-import pro.trevor.joe.parser.tree.expression.literal.CharExpression;
-import pro.trevor.joe.parser.tree.expression.literal.FloatExpression;
-import pro.trevor.joe.parser.tree.expression.literal.IntegerExpression;
-import pro.trevor.joe.parser.tree.expression.literal.StringExpression;
+import pro.trevor.joe.parser.tree.expression.literal.*;
 import pro.trevor.joe.parser.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.parser.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.parser.tree.statement.*;
@@ -37,10 +34,11 @@ public class Parser {
 
     /*
      * (
-     *   [public|private|protected]
+     *   [public|private]
      *     ([final] class)|enum|interface $identifier { ...* }) |
      *     (fn $identifier([type $identifier (, type $identifier)*]) { Statement* }) |
      *     (extern fn $identifier([type $identifier (, type $identifier)*]);)
+     *   | impl $identifier for $identifier { ...* }
      * )*
      */
     public List<TopLevelDeclaration> parseFile() throws ParseException {
@@ -51,9 +49,15 @@ public class Parser {
     }
 
     /*
+     * impl $identifier for $identifier { ...* } |
      * [public|private] [final] class|enum|interface|([extern] fn) $identifier { ...* }
      */
     private TopLevelDeclaration parseTopLevelDeclaration() throws ParseException {
+
+        boolean impl = consumeImplIfPresent();
+        if (impl) {
+            return parseImpl();
+        }
 
         Access access = consumeAccessIfPresent(Access.PRIVATE);
 
@@ -85,6 +89,31 @@ public class Parser {
         }
     }
 
+
+    /*
+     * impl $identifier for $identifier { ...* }
+     */
+    private TopLevelDeclaration parseImpl() throws ParseException {
+        Token interfaceIdentifier = expectAndConsume(TokenType.IDENTIFIER);
+        expectAndConsume(TokenType.FOR);
+        Token classIdentifier = expectAndConsume(TokenType.IDENTIFIER);
+
+        ImplDeclaration implDeclaration = new ImplDeclaration(interfaceIdentifier.getBeginLocation(), interfaceIdentifier.getText(), classIdentifier.getText());
+
+        expectAndConsume(TokenType.LBRACE);
+
+        while (token.getType() != TokenType.RBRACE) {
+            Access access = consumeAccessIfPresent(Access.PRIVATE);
+            boolean isStatic = consumeStaticIfPresent();
+            boolean isFinal = consumeFinalIfPresent();
+            implDeclaration.addDeclaration(parseFunctionDeclaration(access, isStatic, isFinal));
+        }
+
+        expectAndConsumeMaybeEof(TokenType.RBRACE);
+
+        return implDeclaration;
+    }
+
     /*
      * class|enum|interface $identifier { ...* }
      */
@@ -110,13 +139,20 @@ public class Parser {
     }
 
     /*
-     * class $identifier { MemberDeclaration* }
+     * class $identifier [extends $identifier] { MemberDeclaration* }
      */
     private ClassDeclaration parseClass(Access access, boolean isFinal) throws ParseException {
         Token classToken = expectAndConsume(TokenType.CLASS);
         Token classNameToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        ClassDeclaration classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), classNameToken.getText(), access, isFinal);
+        ClassDeclaration classDeclaration;
+
+        if (consumeIfPresent(TokenType.EXTENDS)) {
+            Token superClass = expectAndConsume(TokenType.IDENTIFIER);
+            classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), classNameToken.getText(), access, isFinal, superClass.getText());
+        } else {
+            classDeclaration = new ClassDeclaration(classToken.getBeginLocation(), classNameToken.getText(), access, isFinal);
+        }
 
         expectAndConsume(TokenType.LBRACE);
 
@@ -562,6 +598,16 @@ public class Parser {
             case IDENTIFIER -> {
                 expression = new VariableExpression(begin.getBeginLocation(), begin.getText());
             }
+            case THIS -> {
+                expression = new ThisExpression(begin.getBeginLocation());
+            }
+            case NULL -> {
+                expression = new NullExpression(begin.getBeginLocation());
+            }
+            case SUPER -> {
+                // TODO make the rest of these
+                throw new Error("Super is unimplemented");
+            }
             default -> throw new ParseException(begin.getBeginLocation(), String.format("Unexpected start of expression '%s'", begin.getText()));
         }
         return expression;
@@ -584,6 +630,15 @@ public class Parser {
         } else {
             return new Type(type.toString(), arrayLevel);
         }
+    }
+
+    private boolean consumeImplIfPresent() throws ParseException {
+        if (token.getType() == TokenType.IMPL) {
+            consume();
+            return true;
+        }
+
+        return false;
     }
 
     private Access consumeAccessIfPresent(Access defaultAccess) throws ParseException {
@@ -626,6 +681,15 @@ public class Parser {
 
     private boolean consumeExternIfPresent() throws ParseException {
         if (token.getType() == TokenType.EXTERN) {
+            consume();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean consumeIfPresent(TokenType tokenType) throws ParseException {
+        if (token.getType() == tokenType) {
             consume();
             return true;
         } else {
