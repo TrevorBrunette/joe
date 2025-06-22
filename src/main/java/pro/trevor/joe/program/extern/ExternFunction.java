@@ -5,7 +5,7 @@ import pro.trevor.joe.program.type.TypeReference;
 
 import java.util.List;
 
-public record ExternFunction(Access access, ExternVariant variant, String name, List<TypeReference> parameters, TypeReference returnType) {
+public record ExternFunction(Access access, ExternVariant variant, String name, List<TypeReference> parameters, TypeReference returnType, boolean varArg) {
 
     public String toExternalLinkageString() throws ExternGenerationException {
 

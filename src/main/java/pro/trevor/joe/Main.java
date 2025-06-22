@@ -7,6 +7,7 @@ import pro.trevor.joe.parser.PrintVisitor;
 import pro.trevor.joe.parser.tree.declaration.TopLevelDeclaration;
 import pro.trevor.joe.program.AstToFileVisitor;
 import pro.trevor.joe.program.File;
+import pro.trevor.joe.program.llvm.Generator;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,10 +33,11 @@ public class Main {
 
         File result = toFileVisitor.getFile();
 
-        result.getTypes().forEach(System.out::println);
-        result.getInterfaceImplementations().forEach(System.out::println);
-        result.getFunctions().forEach(System.out::println);
-        result.getExternFunctions().forEach(System.out::println);
+        try (Generator generator = new Generator(result, new java.io.File("output.ll"))) {
+            generator.generate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

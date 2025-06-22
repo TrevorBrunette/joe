@@ -335,8 +335,16 @@ public class Lexer {
                 nextChar();
             }
             case '.' -> {
-                t = TokenType.PERIOD;
-                nextChar();
+                if (nextChar() == '.') {
+                    if (nextChar() == '.') {
+                        t = TokenType.ELLIPSIS;
+                        nextChar();
+                    } else {
+                        t = TokenType.DOTDOT;
+                    }
+                } else {
+                    t = TokenType.PERIOD;
+                }
             }
             case ',' -> {
                 t = TokenType.COMMA;

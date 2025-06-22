@@ -106,7 +106,9 @@ public enum TokenType {
     COMMA(","),
     SEMICOLON(";"),
     COLON(":"),
-    QUESTION("?");
+    QUESTION("?"),
+    DOTDOT(".."),
+    ELLIPSIS("...");
 
     private static final TokenType[] PRIMITIVES = {VOID, BOOL, F32, F64, I8, I16, I32, I64, U8, U16, U32, U64};
     private static final TokenType[] KEYWORDS = {

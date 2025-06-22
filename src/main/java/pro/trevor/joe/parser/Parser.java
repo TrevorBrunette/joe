@@ -13,6 +13,7 @@ import pro.trevor.joe.parser.tree.expression.literal.*;
 import pro.trevor.joe.parser.tree.expression.unary.BinaryInvertExpression;
 import pro.trevor.joe.parser.tree.expression.unary.LogicalInvertExpression;
 import pro.trevor.joe.parser.tree.statement.*;
+import pro.trevor.joe.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -296,20 +297,32 @@ public class Parser {
     }
 
 
-    private List<ParameterDeclaration> parseParameterDeclarations() throws ParseException{
+    private Pair<List<ParameterDeclaration>, Boolean> parseParameterDeclarations() throws ParseException {
         List<ParameterDeclaration> declarations = new ArrayList<>();
         expectAndConsume(TokenType.LPAREN);
 
+        boolean varArg = false;
+
         if (token.getType() != TokenType.RPAREN) {
-            declarations.add(parseParameterDeclaration());
-            while (token.getType() == TokenType.COMMA) {
-                expectAndConsume(TokenType.COMMA);
+            if (token.getType() != TokenType.ELLIPSIS) {
                 declarations.add(parseParameterDeclaration());
+                while (token.getType() == TokenType.COMMA) {
+                    expectAndConsume(TokenType.COMMA);
+                    if (token.getType() != TokenType.ELLIPSIS) {
+                        declarations.add(parseParameterDeclaration());
+                    } else {
+                        varArg = true;
+                        consume();
+                    }
+                }
+            } else {
+                varArg = true;
+                consume();
             }
         }
 
         expectAndConsume(TokenType.RPAREN);
-        return declarations;
+        return new Pair<>(declarations, varArg);
     }
 
     private ParameterDeclaration parseParameterDeclaration() throws ParseException {
@@ -325,12 +338,13 @@ public class Parser {
         consume();
         Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        List<ParameterDeclaration> parameters = parseParameterDeclarations();
+        Pair<List<ParameterDeclaration>, Boolean> parametersResult = parseParameterDeclarations();
+        List<ParameterDeclaration> parameters = parametersResult.getLeft();
 
         Type type = parseType();
         expectAndConsumeMaybeEof(TokenType.SEMICOLON);
 
-        return new FunctionStubDeclaration(beginning, identifierToken.getText(), access, isStatic, isFinal, isExtern, type, parameters);
+        return new FunctionStubDeclaration(beginning, identifierToken.getText(), access, isStatic, isFinal, isExtern, type, parameters, parametersResult.getRight());
     }
 
     private FunctionDeclaration parseFunctionDeclaration(Access access, boolean isStatic, boolean isFinal) throws ParseException {
@@ -338,7 +352,11 @@ public class Parser {
         consume();
         Token identifierToken = expectAndConsume(TokenType.IDENTIFIER);
 
-        List<ParameterDeclaration> parameters = parseParameterDeclarations();
+        Pair<List<ParameterDeclaration>, Boolean> parametersResult = parseParameterDeclarations();
+        if (parametersResult.getRight()) {
+            throw new ParseException(beginning, "Unexpected variable argument function");
+        }
+        List<ParameterDeclaration> parameters = parametersResult.getLeft();
 
         Type type = parseType();
         Block code = new Block(token.getBeginLocation());
@@ -619,6 +637,30 @@ public class Parser {
         }
         Token type = token;
         consume();
+        int arrayLevel = 0;
+        while (token.getType() == TokenType.LBRACKET) {
+            consume();
+            expectAndConsume(TokenType.RBRACKET);
+            ++arrayLevel;
+        }
+        if (type.getType().isPrimitive()) {
+            return new Type(type.getType(), arrayLevel);
+        } else {
+            return new Type(type.toString(), arrayLevel);
+        }
+    }
+
+    private Type parseTypeOrEllipsis() throws ParseException {
+        if (!token.getType().isPrimitive() && !(token.getType() == TokenType.IDENTIFIER)) {
+            throw new ParseException(token.getBeginLocation(), "Expected primitive or identifier but got " + token.getType());
+        }
+        Token type = token;
+        consume();
+
+        if (token.getType() == TokenType.ELLIPSIS) {
+            return new Type(token.getType(), 0);
+        }
+
         int arrayLevel = 0;
         while (token.getType() == TokenType.LBRACKET) {
             consume();

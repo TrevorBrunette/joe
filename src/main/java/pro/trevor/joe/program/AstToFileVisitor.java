@@ -87,6 +87,9 @@ public class AstToFileVisitor implements AstVisitor {
         TypeReference returnType = TypeReference.fromType(functionDeclaration.getReturnType());
         List<Parameter> parameters = functionDeclaration.getArguments().stream().map(arg -> new Parameter(arg.getIdentifier(), TypeReference.fromType(arg.getType()))).toList();
         Function function = new Function(functionDeclaration.getAccess(), functionDeclaration.isStatic(), functionDeclaration.getIdentifier(), parameters, returnType);
+        visit(functionDeclaration.getCode());
+        function.getCodeBlock().statements().addAll(currentBlock.statements());
+        currentBlock = null;
         if (parent != null) {
             parent.getImplementation().functions().add(function);
         } else if (currentImpl != null) {
@@ -101,9 +104,13 @@ public class AstToFileVisitor implements AstVisitor {
         TypeReference returnType = TypeReference.fromType(functionStubDeclaration.getReturnType());
         if (functionStubDeclaration.isExtern()) {
             List<TypeReference> parameterTypes = functionStubDeclaration.getArguments().stream().map(arg -> TypeReference.fromType(arg.getType())).toList();
-            ExternFunction function = new ExternFunction(functionStubDeclaration.getAccess(), ExternVariant.C, functionStubDeclaration.getIdentifier(), parameterTypes, returnType);
+            ExternFunction function = new ExternFunction(functionStubDeclaration.getAccess(), ExternVariant.C, functionStubDeclaration.getIdentifier(), parameterTypes, returnType, functionStubDeclaration.isVarArg());
             file.getExternFunctions().add(function);
         } else {
+            if (functionStubDeclaration.isVarArg()) {
+                throw new Error("Only extern functions can have variable arguments");
+            }
+
             Interface parent = (Interface) currentType;
 
             List<Parameter> parameters = functionStubDeclaration.getArguments().stream().map(arg -> new Parameter(arg.getIdentifier(), TypeReference.fromType(arg.getType()))).toList();
@@ -133,13 +140,11 @@ public class AstToFileVisitor implements AstVisitor {
 
     @Override
     public void visit(Block block) {
-        Expressions.Block previous = this.currentBlock;
         this.currentBlock = new Expressions.Block(new ArrayList<>());
         for (IStatement statement : block.getStatements()) {
             this.visit(statement);
             this.currentBlock.statements().add(returnStatement);
         }
-        this.currentBlock = previous;
     }
 
     @Override
@@ -196,7 +201,7 @@ public class AstToFileVisitor implements AstVisitor {
 
     @Override
     public void visit(CharExpression charExpression) {
-        this.returnExpression = new Expressions.Char(charExpression.getValue().charAt(0));
+        this.returnExpression = new Expressions.Char(StringUtil.escape(charExpression.getValue()).charAt(0));
     }
 
     @Override
@@ -216,7 +221,7 @@ public class AstToFileVisitor implements AstVisitor {
 
     @Override
     public void visit(StringExpression stringExpression) {
-        this.returnExpression = new Expressions.String(stringExpression.getValue());
+        this.returnExpression = new Expressions.String(StringUtil.escape(stringExpression.getValue()));
     }
 
     @Override
@@ -468,7 +473,7 @@ public class AstToFileVisitor implements AstVisitor {
         this.visit(variableAccessExpression.getLeftOperand());
         Expressions.YieldingExpression left = (Expressions.YieldingExpression) returnExpression;
         this.visit(variableAccessExpression.getRightOperand());
-        Expressions.Variable right = (Expressions.Variable) returnExpression;
+        Expressions.Expression right = returnExpression;
         this.returnExpression = new Expressions.VariableAccess(left, right);
     }
 

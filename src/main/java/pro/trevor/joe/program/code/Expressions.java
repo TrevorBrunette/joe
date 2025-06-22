@@ -9,10 +9,10 @@ import java.util.List;
 
 public class Expressions {
 
-    public sealed interface Expression permits AssignableExpression, YieldingExpression
+    public sealed interface Expression permits YieldingExpression
     {}
 
-    public sealed interface AssignableExpression extends Expression permits
+    public sealed interface AssignableExpression extends YieldingExpression permits
             Tuple,
             Variable,
             VariableAccess
@@ -21,7 +21,7 @@ public class Expressions {
     public record Tuple(List<Expression> members) implements AssignableExpression {}
     public record Variable(java.lang.String name) implements AssignableExpression {}
 
-    public sealed interface YieldingExpression extends Expression permits BinaryExpression, LiteralExpression, MiscExpression, ProgramExpression, UnaryExpression {}
+    public sealed interface YieldingExpression extends Expression permits AssignableExpression, BinaryExpression, LiteralExpression, MiscExpression, ProgramExpression, UnaryExpression {}
 
     public sealed interface BinaryExpression extends YieldingExpression permits
             Addition,
@@ -67,7 +67,7 @@ public class Expressions {
     public record ShiftRight(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record ShiftRightLogical(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record Subtraction(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
-    public record VariableAccess(YieldingExpression left, Variable right) implements BinaryExpression, AssignableExpression {}
+    public record VariableAccess(YieldingExpression left, Expression right) implements BinaryExpression, AssignableExpression {}
 
     public sealed interface UnaryExpression extends YieldingExpression permits
             BinaryInvert,
