@@ -25,11 +25,14 @@ public class Parser {
     private final List<TopLevelDeclaration> file;
 
     private Token token;
+    private Token lookahead;
 
     public Parser(Lexer lexer) {
         this.lexer = lexer;
         this.errors = new ArrayList<>();
         this.file = new ArrayList<>();
+        this.token = null;
+        this.lookahead = null;
         consumeMaybeEof();
     }
 
@@ -588,18 +591,30 @@ public class Parser {
                 expectAndConsume(TokenType.RPAREN);
             }
             case NEW -> {
-                Token typeToken = expectAndConsume(TokenType.IDENTIFIER);
-                expectAndConsume(TokenType.LPAREN);
-                List<Expression> parameters = new ArrayList<>();
-                if (token.getType() != TokenType.RPAREN) {
-                    parameters.add(parseExpression());
-                    while (token.getType() == TokenType.COMMA) {
-                        consume();
+                Type type = parseTypeWithLookahead();
+                if (token.getType() == TokenType.LPAREN) {
+                    // Object instantiation
+                    expectAndConsume(TokenType.LPAREN);
+                    List<Expression> parameters = new ArrayList<>();
+                    if (token.getType() != TokenType.RPAREN) {
                         parameters.add(parseExpression());
+                        while (token.getType() == TokenType.COMMA) {
+                            consume();
+                            parameters.add(parseExpression());
+                        }
                     }
+                    expectAndConsume(TokenType.RPAREN);
+                    expression = new ObjectInstantiationExpression(begin.getBeginLocation(), type.toString(), parameters);
+                } else if (token.getType() == TokenType.LBRACKET) {
+                    // Array instantiation
+                    expectAndConsume(TokenType.LBRACKET);
+                    Expression sizeParameter = parseExpression();
+                    expectAndConsume(TokenType.RBRACKET);
+                    expression = new ArrayInstantiationExpression(begin.getBeginLocation(), type, sizeParameter);
+                } else {
+                    throw new ParseException(begin.getBeginLocation(), new TokenType[]{TokenType.LPAREN, TokenType.LBRACKET}, begin);
                 }
-                expectAndConsume(TokenType.RPAREN);
-                expression = new ObjectInstantiationExpression(begin.getBeginLocation(), typeToken.getText(), parameters);
+
             }
             case CHAR_IMMEDIATE -> {
                 expression = new CharExpression(begin.getBeginLocation(), begin.getText().substring(1, begin.getText().length() - 1));
@@ -650,21 +665,16 @@ public class Parser {
         }
     }
 
-    private Type parseTypeOrEllipsis() throws ParseException {
+    private Type parseTypeWithLookahead() throws ParseException {
         if (!token.getType().isPrimitive() && !(token.getType() == TokenType.IDENTIFIER)) {
             throw new ParseException(token.getBeginLocation(), "Expected primitive or identifier but got " + token.getType());
         }
         Token type = token;
         consume();
-
-        if (token.getType() == TokenType.ELLIPSIS) {
-            return new Type(token.getType(), 0);
-        }
-
         int arrayLevel = 0;
-        while (token.getType() == TokenType.LBRACKET) {
+        while (token.getType() == TokenType.LBRACKET && lookahead().getType() == TokenType.RBRACKET) {
             consume();
-            expectAndConsume(TokenType.RBRACKET);
+            consume();
             ++arrayLevel;
         }
         if (type.getType().isPrimitive()) {
@@ -764,15 +774,27 @@ public class Parser {
     }
 
     private Token consume() throws ParseException{
-        token = lexer.getNextToken();
+        consumeMaybeEof();
         if (token.getType() == TokenType.EOF) {
             throw new ParseException(token.getEndLocation(), "Unexpected EOF");
         }
         return token;
     }
 
+    private Token lookahead() {
+        if (lookahead == null) {
+            lookahead = lexer.getNextToken();
+        }
+        return lookahead;
+    }
+
     private Token consumeMaybeEof() {
-        token = lexer.getNextToken();
+        if (lookahead != null) {
+            token = lookahead;
+            lookahead = null;
+        } else {
+            token = lexer.getNextToken();
+        }
         return token;
     }
 

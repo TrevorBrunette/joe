@@ -2,6 +2,7 @@ package pro.trevor.joe.program.code;
 
 import pro.trevor.joe.program.Parameter;
 import pro.trevor.joe.program.type.NamedTypeReference;
+import pro.trevor.joe.program.type.TypeReference;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -12,14 +13,12 @@ public class Expressions {
     public sealed interface Expression permits YieldingExpression
     {}
 
-    public sealed interface AssignableExpression extends YieldingExpression permits
-            Tuple,
-            Variable,
-            VariableAccess
+    public sealed interface AssignableExpression extends YieldingExpression permits ArrayIndex, Tuple, Variable, VariableAccess
     {}
 
     public record Tuple(List<Expression> members) implements AssignableExpression {}
     public record Variable(java.lang.String name) implements AssignableExpression {}
+    public record VariableAccess(YieldingExpression left, Expression right) implements AssignableExpression {}
 
     public sealed interface YieldingExpression extends Expression permits AssignableExpression, BinaryExpression, LiteralExpression, MiscExpression, ProgramExpression, UnaryExpression {}
 
@@ -43,9 +42,11 @@ public class Expressions {
             ShiftLeft,
             ShiftRight,
             ShiftRightLogical,
-            Subtraction,
-            VariableAccess
-    {}
+            Subtraction
+    {
+        YieldingExpression left();
+        YieldingExpression right();
+    }
 
     public record Addition(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record BinaryAnd(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
@@ -67,7 +68,6 @@ public class Expressions {
     public record ShiftRight(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record ShiftRightLogical(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
     public record Subtraction(YieldingExpression left, YieldingExpression right) implements BinaryExpression {}
-    public record VariableAccess(YieldingExpression left, Expression right) implements BinaryExpression, AssignableExpression {}
 
     public sealed interface UnaryExpression extends YieldingExpression permits
             BinaryInvert,
@@ -75,9 +75,9 @@ public class Expressions {
             NumericalNegate
     {}
 
-    public record BinaryInvert(Expression operand) implements UnaryExpression {}
-    public record LogicalInvert(Expression operand) implements UnaryExpression {}
-    public record NumericalNegate(Expression operand) implements UnaryExpression {}
+    public record BinaryInvert(YieldingExpression operand) implements UnaryExpression {}
+    public record LogicalInvert(YieldingExpression operand) implements UnaryExpression {}
+    public record NumericalNegate(YieldingExpression operand) implements UnaryExpression {}
 
     public sealed interface LiteralExpression extends YieldingExpression permits
             Boolean,
@@ -111,6 +111,7 @@ public class Expressions {
 
     public sealed interface MiscExpression extends YieldingExpression permits
             ArrayIndex,
+            ArrayInstantiation,
             Assignment,
             Closure,
             MethodInvocation,
@@ -118,8 +119,9 @@ public class Expressions {
             Wrapped
     {}
 
-    public record ArrayIndex(Expression array, YieldingExpression index) implements MiscExpression {}
-    public record Assignment(Expression left, YieldingExpression right) implements MiscExpression {}
+    public record ArrayIndex(YieldingExpression array, YieldingExpression index) implements MiscExpression, AssignableExpression {}
+    public record ArrayInstantiation(TypeReference type, YieldingExpression size) implements MiscExpression {}
+    public record Assignment(AssignableExpression left, YieldingExpression right) implements MiscExpression {}
     public record Closure(List<Parameter> parameters, Statements.Statement statement) implements MiscExpression {}
     public record MethodInvocation(Expression method, List<YieldingExpression> arguments) implements MiscExpression {}
     public record ObjectInstantiation(NamedTypeReference type, List<YieldingExpression> arguments) implements MiscExpression {}

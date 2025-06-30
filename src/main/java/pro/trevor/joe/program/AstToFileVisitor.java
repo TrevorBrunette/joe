@@ -241,7 +241,7 @@ public class AstToFileVisitor implements AstVisitor {
     @Override
     public void visit(AssignmentExpression assignmentExpression) {
         this.visit(assignmentExpression.getLeftOperand());
-        Expressions.Expression left = returnExpression;
+        Expressions.AssignableExpression left = (Expressions.AssignableExpression) returnExpression;
         this.visit(assignmentExpression.getRightOperand());
         Expressions.YieldingExpression right = (Expressions.YieldingExpression) returnExpression;
         this.returnExpression = new Expressions.Assignment(left, right);
@@ -439,6 +439,14 @@ public class AstToFileVisitor implements AstVisitor {
         this.visit(arrayIndexExpression.getIndex());
         Expressions.YieldingExpression index = (Expressions.YieldingExpression) returnExpression;
         this.returnExpression = new Expressions.ArrayIndex(array, index);
+    }
+
+    @Override
+    public void visit(ArrayInstantiationExpression arrayInstantiationExpression) {
+        TypeReference type = TypeReference.fromType(arrayInstantiationExpression.getType());
+        this.visit(arrayInstantiationExpression.getSizeExpression());
+        Expressions.YieldingExpression index = (Expressions.YieldingExpression) returnExpression;
+        this.returnExpression = new Expressions.ArrayInstantiation(type, index);
     }
 
     @Override

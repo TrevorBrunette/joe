@@ -105,6 +105,7 @@ public interface AstVisitor {
 
             // Other expressions
             case ArrayIndexExpression x -> visit(x);
+            case ArrayInstantiationExpression x -> visit(x);
             case VariableExpression x -> visit(x);
             case MethodInvocationExpression x -> visit(x);
             case ObjectInstantiationExpression x -> visit(x);
@@ -146,6 +147,7 @@ public interface AstVisitor {
     void visit(ShiftRightLogicalExpression shiftRightLogicalExpression);
     void visit(SubtractionExpression subtractionExpression);
     void visit(ArrayIndexExpression arrayIndexExpression);
+    void visit(ArrayInstantiationExpression arrayInstantiationExpression);
     void visit(VariableExpression variableExpression);
     void visit(MethodInvocationExpression methodInvocationExpression);
     void visit(ObjectInstantiationExpression objectInstantiationExpression);

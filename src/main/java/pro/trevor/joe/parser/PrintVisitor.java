@@ -468,6 +468,13 @@ public class PrintVisitor implements AstVisitor {
     }
 
     @Override
+    public void visit(ArrayInstantiationExpression arrayInstantiationExpression) {
+        sb.append("new ").append(arrayInstantiationExpression.getType().toString()).append("[");
+        visit(arrayInstantiationExpression.getSizeExpression());
+        sb.append("]");
+    }
+
+    @Override
     public void visit(ArrayIndexExpression arrayIndexExpression) {
         sb.append('(');
         visit(arrayIndexExpression.getArray());
