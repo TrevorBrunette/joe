@@ -4,6 +4,7 @@ import pro.trevor.joe.program.Path;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public record NamedTypeReference(Path path, String name) implements TypeReference {
 
@@ -27,5 +28,16 @@ public record NamedTypeReference(Path path, String name) implements TypeReferenc
 
     public void addSection(String section) {
         path.elements().add(section);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof NamedTypeReference that)) return false;
+        return Objects.equals(path, that.path) && Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(path, name);
     }
 }

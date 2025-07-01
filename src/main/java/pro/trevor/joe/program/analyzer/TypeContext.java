@@ -3,6 +3,7 @@ package pro.trevor.joe.program.analyzer;
 import org.bytedeco.llvm.LLVM.LLVMValueRef;
 import pro.trevor.joe.program.File;
 import pro.trevor.joe.program.TopLevelType;
+import pro.trevor.joe.program.program_class.Class;
 import pro.trevor.joe.program.type.TypeReference;
 
 import java.util.HashMap;
@@ -18,11 +19,15 @@ public class TypeContext {
         this.types = new HashMap<>();
         this.locals = new HashMap<>();
         this.localStorage = new HashMap<>();
+        handleIntrinsicTypes();
         handleTopLevelTypes(file);
     }
 
+    private void handleIntrinsicTypes() {
+        this.types.put(Class.UNIVERSAL_PARENT.getName().name(), Class.UNIVERSAL_PARENT);
+    }
+
     private void handleTopLevelTypes(File file) {
-        this.types.clear();
         file.getTypes().forEach((type) -> this.types.put(type.getName().name(), type));
     }
 

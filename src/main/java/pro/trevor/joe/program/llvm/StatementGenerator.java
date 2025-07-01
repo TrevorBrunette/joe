@@ -44,6 +44,7 @@ public class StatementGenerator {
             case ArrayTypeReference arrayTypeReference -> {
                 LLVMTypeRef type = generator.getLLVMType(arrayTypeReference);
                 LLVMValueRef alloca = LLVMBuildAlloca(generator.llvm.builder, type, variableInitializationStatement.name());
+                
                 generator.typeAnalyzer.getContext().addLocalStorageValue(variableInitializationStatement.name(), alloca);
                 LLVMValueRef value = generator.addExpression(block, variableInitializationStatement.value());
                 TypeReference valueType = generator.typeAnalyzer.getType(variableInitializationStatement.value()).orElseThrow();

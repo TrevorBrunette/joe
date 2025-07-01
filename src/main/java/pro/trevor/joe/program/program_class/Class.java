@@ -11,7 +11,7 @@ import java.util.List;
 public final class Class extends TopLevelType {
 
     private static final String UNIVERSAL_PARENT_CLASS_NAME = "Object";
-    private static final NamedTypeReference UNIVERSAL_PARENT_TYPE_REFERENCE = new NamedTypeReference("joe::lang::" + UNIVERSAL_PARENT_CLASS_NAME);
+    private static final NamedTypeReference UNIVERSAL_PARENT_TYPE_REFERENCE = new NamedTypeReference(UNIVERSAL_PARENT_CLASS_NAME);
     public static final Class UNIVERSAL_PARENT = createUniversalParent();
 
     private final NamedTypeReference superclass;

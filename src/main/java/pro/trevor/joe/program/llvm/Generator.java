@@ -6,15 +6,20 @@ import org.bytedeco.llvm.LLVM.*;
 import pro.trevor.joe.parser.tree.declaration.Access;
 import pro.trevor.joe.program.File;
 import pro.trevor.joe.program.Parameter;
+import pro.trevor.joe.program.TopLevelType;
 import pro.trevor.joe.program.analyzer.TypeAnalyzer;
 import pro.trevor.joe.program.code.Expressions;
 import pro.trevor.joe.program.code.Function;
 import pro.trevor.joe.program.code.Statements;
 import pro.trevor.joe.program.extern.ExternFunction;
 import pro.trevor.joe.program.extern.ExternVariant;
+import pro.trevor.joe.program.program_class.Class;
+import pro.trevor.joe.program.program_enum.Enum;
+import pro.trevor.joe.program.program_interface.Interface;
 import pro.trevor.joe.program.type.*;
 import pro.trevor.joe.util.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +62,7 @@ public class Generator implements AutoCloseable {
 
 
     public boolean generate() {
+        addTopLevelTypes();
         addUndeclaredExternFunctions();
         addExternalFunctions();
         addDeclaredFunction(file.getFunctions().stream().filter((f) -> f.getIdentifier().equals("main")).findFirst().get());
@@ -79,7 +85,9 @@ public class Generator implements AutoCloseable {
         LLVMValueRef llvmFunction = LLVMGetNamedFunction(llvm.module, function.getIdentifier());
         if (llvmFunction == null) {
             LLVMTypeRef returnType = getLLVMType(function.getReturnType());
-            LLVMTypeRef[] paramTypes = function.getParameters().stream().map(Parameter::type).map(this::getLLVMType).toArray(LLVMTypeRef[]::new);
+            LLVMTypeRef[] paramTypes = function.getParameters().stream()
+                    .map(Parameter::type).map(this::getLLVMType)
+                    .toArray(LLVMTypeRef[]::new);
             PointerPointer<LLVMTypeRef> params = new PointerPointer<>(paramTypes);
             llvmFunction = LLVMAddFunction(llvm.module, function.getIdentifier(), LLVMFunctionType(returnType, params, paramTypes.length, 0));
         }
@@ -91,6 +99,60 @@ public class Generator implements AutoCloseable {
             addStatement(entry, statement);
         }
         this.currentFunction = null;
+    }
+
+    private List<Class> getInheritance(Class clazz) {
+        List<Class> output = new ArrayList<>();
+        Class current = clazz;
+        while (current.getSuperclass() != null) {
+            output.add(current);
+            NamedTypeReference superClassName = current.getSuperclass();
+            Optional<TopLevelType> mabeType = typeAnalyzer.getContext().getTopLevelType(superClassName.name());
+            if (mabeType.isEmpty()) {
+                throw new IllegalStateException("Cannot find super class '" + superClassName.name() + "'");
+            }
+            if (mabeType.get() instanceof Class parentClass) {
+                current = parentClass;
+            } else {
+                throw new IllegalStateException("Cannot find super class '" + superClassName.name() + "'; instead found " + mabeType.get().getClass().getSimpleName());
+            }
+        }
+        return output;
+    }
+
+    private void addClass(Class classType) {
+        LLVMTypeRef structType = LLVMStructCreateNamed(llvm.ctx, classType.getName().name());
+        List<Class> inheritance = getInheritance(classType).reversed();
+        List<LLVMTypeRef> members = new ArrayList<>();
+
+        for (Class parent : inheritance) {
+            members.addAll(parent.getVariables().stream().map((v) -> getLLVMType(v.type())).toList());
+        }
+
+        LLVMTypeRef[] memberTypes = members.toArray(new LLVMTypeRef[0]);
+        PointerPointer<LLVMTypeRef> memberTypesPtr = new PointerPointer<>(memberTypes);
+        LLVMStructSetBody(structType, memberTypesPtr, memberTypes.length, 0);
+    }
+
+    private void addEnum(Enum enumType) {
+
+    }
+
+    private void addInterface(Interface interfaceType) {
+
+    }
+
+    private void addTopLevelType(TopLevelType type) {
+        switch (type) {
+            case Class _class -> addClass(_class);
+            case Enum _enum -> addEnum(_enum);
+            case Interface _interface -> addInterface(_interface);
+            default -> throw new IllegalStateException("Unknown top-level type " + type.getClass().getSimpleName());
+        }
+    }
+
+    private void addTopLevelTypes() {
+        this.file.getTypes().forEach(this::addTopLevelType);
     }
 
     private void addExternalFunction(ExternFunction function) {
