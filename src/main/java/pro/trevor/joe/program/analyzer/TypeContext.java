@@ -1,5 +1,6 @@
 package pro.trevor.joe.program.analyzer;
 
+import org.bytedeco.llvm.LLVM.LLVMTypeRef;
 import org.bytedeco.llvm.LLVM.LLVMValueRef;
 import pro.trevor.joe.program.File;
 import pro.trevor.joe.program.TopLevelType;
@@ -12,11 +13,13 @@ import java.util.Optional;
 
 public class TypeContext {
     private final Map<String, TopLevelType> types;
+    private final Map<String, LLVMTypeRef> typeRefs;
     private final Map<String, TypeReference> locals;
     private final Map<String, LLVMValueRef> localStorage;
 
     public TypeContext(File file) {
         this.types = new HashMap<>();
+        this.typeRefs = new HashMap<>();
         this.locals = new HashMap<>();
         this.localStorage = new HashMap<>();
         handleIntrinsicTypes();
@@ -35,6 +38,10 @@ public class TypeContext {
         return Optional.ofNullable(this.types.get(name));
     }
 
+    public Optional<LLVMTypeRef> getTypeRef(String name) {
+        return Optional.ofNullable(this.typeRefs.get(name));
+    }
+
     public Optional<TypeReference> getLocalType(String name) {
         return Optional.ofNullable(this.locals.get(name));
     }
@@ -49,6 +56,10 @@ public class TypeContext {
 
     public void addLocalStorageValue(String name, LLVMValueRef type) {
         this.localStorage.put(name, type);
+    }
+
+    public void addTypeRef(String name, LLVMTypeRef type) {
+        this.typeRefs.put(name, type);
     }
 
     public void resetLocals() {
