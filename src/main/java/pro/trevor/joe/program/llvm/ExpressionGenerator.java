@@ -6,6 +6,8 @@ import org.bytedeco.llvm.LLVM.LLVMTypeRef;
 import org.bytedeco.llvm.LLVM.LLVMValueRef;
 import pro.trevor.joe.program.code.Expressions;
 import pro.trevor.joe.program.type.ArrayTypeReference;
+import pro.trevor.joe.program.type.Primitive;
+import pro.trevor.joe.program.type.PrimitiveTypeReference;
 import pro.trevor.joe.program.type.TypeReference;
 import pro.trevor.joe.util.Pair;
 
@@ -65,6 +67,24 @@ public class ExpressionGenerator {
             case Expressions.Modulo moduloExpression -> {
                 return LLVMBuildSRem(generator.llvm.builder, addExpression(block, moduloExpression.left()), addExpression(block, moduloExpression.right()), "mod." + statementGenerator.getStatementCount());
             }
+            case Expressions.Equals equalsExpression -> {
+                return compExpression(block, equalsExpression);
+            }
+            case Expressions.NotEquals notEqualsExpression -> {
+                return compExpression(block, notEqualsExpression);
+            }
+            case Expressions.LessThan lessThanExpression -> {
+                return compExpression(block, lessThanExpression);
+            }
+            case Expressions.LessThanOrEquals lessThanOrEqualsExpression -> {
+                return compExpression(block, lessThanOrEqualsExpression);
+            }
+            case Expressions.GreaterThan greaterThanExpression -> {
+                return compExpression(block, greaterThanExpression);
+            }
+            case Expressions.GreaterThanOrEquals greaterThanOrEqualsExpression -> {
+                return compExpression(block, greaterThanOrEqualsExpression);
+            }
             case Expressions.Variable variableExpression -> {
                 return variableExpression(variableExpression);
             }
@@ -119,6 +139,42 @@ public class ExpressionGenerator {
         return LLVMBuildCall2(generator.llvm.builder, fnType, fn, args, arguments.length, name + ".call." + statementGenerator.getStatementCount());
     }
 
+    private LLVMValueRef compExpression(LLVMBasicBlockRef block, Expressions.BinaryExpression expression) {
+        Expressions.YieldingExpression left = expression.left();
+        Expressions.YieldingExpression right = expression.right();
+
+        TypeReference leftType = generator.typeAnalyzer.getType(left).orElseThrow();
+        TypeReference rightType = generator.typeAnalyzer.getType(right).orElseThrow();
+
+        LLVMValueRef lhs = addExpression(block, expression.left());
+        LLVMValueRef rhs = addExpression(block, expression.right());
+
+        if (leftType instanceof PrimitiveTypeReference leftPrimitive && rightType instanceof PrimitiveTypeReference rightPrimitive) {
+            Optional<Constants.CompOpCode> opCode = Constants.CompOpCode.opCodeFor(expression, leftPrimitive, leftPrimitive);
+            if (opCode.isEmpty()) {
+                throw new IllegalStateException("Illegal internal comparison state for expression type: " + expression.getClass().getSimpleName());
+            }
+
+            int opCodeInt = opCode.get().op;
+
+            Primitive resultType = Primitive.arithmetic(leftPrimitive.primitive(), rightPrimitive.primitive());
+            PrimitiveTypeReference resultTypeRef = new PrimitiveTypeReference(resultType);
+            LLVMValueRef lhsCast = Util.cast(generator, lhs, generator.getLLVMType(resultTypeRef));
+            LLVMValueRef rhsCast = Util.cast(generator, rhs, generator.getLLVMType(resultTypeRef));
+
+            if (resultType.isFloat()) {
+                return LLVMBuildFCmp(generator.llvm.builder, opCodeInt, lhsCast, rhsCast, "fcmp." + statementGenerator.getStatementCount());
+            } else if (resultType.isInt()) {
+                return LLVMBuildICmp(generator.llvm.builder, opCodeInt, lhsCast, rhsCast, "icmp." + statementGenerator.getStatementCount());
+            } else {
+                throw new IllegalStateException("Illegal result type for comparison " + resultType.name());
+            }
+        } else {
+            throw new IllegalStateException("Comparison of non-primitives: " + leftType + " and " + rightType);
+        }
+
+    }
+
     private LLVMValueRef variableExpression(Expressions.Variable variableExpression) {
         LLVMValueRef value;
         String name = variableExpression.name();
@@ -128,7 +184,7 @@ public class ExpressionGenerator {
         } else {
             throw new IllegalStateException("Undeclared variable: " + name);
         }
-        return LLVMBuildLoad2(generator.llvm.builder, LLVMGetAllocatedType(value), value, name);
+        return LLVMBuildLoad2(generator.llvm.builder, LLVMGetAllocatedType(value), value, name + "." + statementGenerator.getStatementCount());
     }
 
     private LLVMValueRef assignmentExpression(LLVMBasicBlockRef block, Expressions.Assignment assignmentExpression) {

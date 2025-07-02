@@ -82,9 +82,7 @@ public class Generator implements AutoCloseable {
         }
 
         typeAnalyzer.getContext().resetLocals();
-        LLVMBasicBlockRef entry = LLVMAppendBasicBlockInContext(llvm.ctx, llvmFunction, "entry");
-        LLVMPositionBuilderAtEnd(llvm.builder, entry);
-        statementGenerator.addFunction(entry, function, llvmFunction);
+        statementGenerator.addFunction(function, llvmFunction);
         currentFunction = null;
     }
 

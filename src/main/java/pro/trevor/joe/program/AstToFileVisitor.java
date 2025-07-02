@@ -32,7 +32,7 @@ public class AstToFileVisitor implements AstVisitor {
 
     private final File file;
     private TopLevelType currentType;
-    private Expressions.Block currentBlock;
+    private Statements.Block currentBlock;
     private Expressions.Expression returnExpression;
     private Statements.Statement returnStatement;
     private InterfaceImplementation currentImpl;
@@ -140,11 +140,19 @@ public class AstToFileVisitor implements AstVisitor {
 
     @Override
     public void visit(Block block) {
-        this.currentBlock = new Expressions.Block(new ArrayList<>());
+        Statements.Block oldBlock = null;
+        if (currentBlock != null) {
+            oldBlock = currentBlock;
+        }
+        this.currentBlock = new Statements.Block(new ArrayList<>());
         for (IStatement statement : block.getStatements()) {
             this.visit(statement);
             this.currentBlock.statements().add(returnStatement);
         }
+        if (oldBlock != null) {
+            this.currentBlock = oldBlock;
+        }
+
     }
 
     @Override
@@ -163,8 +171,14 @@ public class AstToFileVisitor implements AstVisitor {
         this.visit(ifStatement.getCondition());
         Expressions.Expression condition = returnExpression;
         this.visit(ifStatement.getIfTrue());
-        Statements.Statement statement = returnStatement;
-        this.returnExpression = new Expressions.If(condition, statement);
+        Statements.Statement thenStatement = returnStatement;
+        if (ifStatement.getIfFalse() == null) {
+            this.returnStatement = new Statements.If(condition, thenStatement);
+        } else {
+            this.visit(ifStatement.getIfFalse());
+            Statements.Statement elseStatement = returnStatement;
+            this.returnStatement = new Statements.IfElse(condition, thenStatement, elseStatement);
+        }
     }
 
     @Override

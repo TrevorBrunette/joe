@@ -20,7 +20,7 @@ public class Expressions {
     public record Variable(java.lang.String name) implements AssignableExpression {}
     public record VariableAccess(YieldingExpression left, Expression right) implements AssignableExpression {}
 
-    public sealed interface YieldingExpression extends Expression permits AssignableExpression, BinaryExpression, LiteralExpression, MiscExpression, ProgramExpression, UnaryExpression {}
+    public sealed interface YieldingExpression extends Expression permits AssignableExpression, BinaryExpression, LiteralExpression, MiscExpression, UnaryExpression {}
 
     public sealed interface BinaryExpression extends YieldingExpression permits
             Addition,
@@ -98,16 +98,6 @@ public class Expressions {
     public record Super(NamedTypeReference self) implements LiteralExpression {}
     public record This(NamedTypeReference self) implements LiteralExpression {}
     public record Null() implements LiteralExpression {}
-
-    public sealed interface ProgramExpression extends YieldingExpression permits
-            Block,
-            If,
-            IfElse
-    {}
-
-    public record Block(List<Statements.Statement> statements) implements ProgramExpression {}
-    public record If(Expressions.Expression condition, Statements.Statement thenStatement) implements ProgramExpression {}
-    public record IfElse(Expressions.Expression condition, Statements.Statement thenStatement, Statements.Statement elseStatement) implements ProgramExpression {}
 
     public sealed interface MiscExpression extends YieldingExpression permits
             ArrayIndex,

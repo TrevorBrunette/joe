@@ -19,14 +19,24 @@ public class StatementGenerator {
     private final ExpressionGenerator expressionGenerator;
     private int count;
 
+    private LLVMBasicBlockRef block;
+    private LLVMValueRef currentLlvmFunction;
+
     public StatementGenerator(Generator generator) {
         this.generator = generator;
         this.expressionGenerator = new ExpressionGenerator(generator, this);
         this.count = 0;
+        this.block = null;
+        this.currentLlvmFunction = null;
     }
 
     public int getStatementCount() {
         return count++;
+    }
+
+    private void newBlock(LLVMBasicBlockRef block) {
+        this.block = block;
+        LLVMPositionBuilderAtEnd(generator.llvm.builder, block);
     }
 
     private void variableDeclaration(Statements.VariableDeclaration variableDeclarationStatement) {
@@ -46,8 +56,9 @@ public class StatementGenerator {
         }
     }
 
-    private void variableInitialization(LLVMBasicBlockRef block, Statements.VariableInitialization variableInitializationStatement) {
+    private void variableInitialization(Statements.VariableInitialization variableInitializationStatement) {
         generator.typeAnalyzer.getContext().addLocalType(variableInitializationStatement.name(), variableInitializationStatement.type());
+        System.out.println(variableInitializationStatement);
         switch (variableInitializationStatement.type()) {
             case PrimitiveTypeReference primitiveTypeReference -> {
                 LLVMTypeRef type = generator.getLLVMType(primitiveTypeReference);
@@ -75,7 +86,7 @@ public class StatementGenerator {
         }
     }
 
-    private void returnStatement(LLVMBasicBlockRef block, Statements.Return returnStatement) {
+    private void returnStatement(Statements.Return returnStatement) {
         if (returnStatement.value() == null) {
             if (generator.currentFunction.getReturnType() instanceof PrimitiveTypeReference(Primitive primitive)) {
                 if (primitive != Primitive.VOID) {
@@ -98,20 +109,44 @@ public class StatementGenerator {
         }
     }
 
-    private void addStatement(LLVMBasicBlockRef block, Statements.Statement statement) {
-        LLVMPositionBuilderAtEnd(generator.llvm.builder, block);
+    private void ifStatement(Statements.If ifStatement) {
+        LLVMValueRef condition = expressionGenerator.addExpression(block, ifStatement.condition());
+        LLVMBasicBlockRef thenBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "then." +  getStatementCount());
+        LLVMBasicBlockRef endBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "end." +  getStatementCount());
+        LLVMBuildCondBr(generator.llvm.builder, condition, thenBlock, endBlock);
+        newBlock(thenBlock);
+        addStatement(ifStatement.then());
+        LLVMBuildBr(generator.llvm.builder, endBlock);
+        newBlock(endBlock);
+    }
+
+    private void ifElseStatement(Statements.IfElse ifElseStatement) {
+        LLVMValueRef condition = expressionGenerator.addExpression(block, ifElseStatement.condition());
+        LLVMBasicBlockRef thenBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "then." +  getStatementCount());
+        LLVMBasicBlockRef elseBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "else." +  getStatementCount());
+        LLVMBasicBlockRef endBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "end." +  getStatementCount());
+        LLVMBuildCondBr(generator.llvm.builder, condition, thenBlock, elseBlock);
+        newBlock(thenBlock);
+        addStatement(ifElseStatement.then());
+        LLVMBuildBr(generator.llvm.builder, endBlock);
+        newBlock(elseBlock);
+        addStatement(ifElseStatement.elseStatement());
+        LLVMBuildBr(generator.llvm.builder, endBlock);
+        newBlock(endBlock);
+    }
+
+    private void addStatement(Statements.Statement statement) {
         switch (statement) {
-            case Statements.Expression expressionStatement -> {
-                expressionGenerator.addExpression(block, expressionStatement.expression());
-            }
-            case Statements.Return returnStatement -> {
-                returnStatement(block, returnStatement);
-            }
-            case Statements.VariableDeclaration variableDeclarationStatement -> {
-                variableDeclaration(variableDeclarationStatement);
-            }
-            case Statements.VariableInitialization variableInitializationStatement -> {
-                variableInitialization(block, variableInitializationStatement);
+            case Statements.Expression expressionStatement -> expressionGenerator.addExpression(block, expressionStatement.expression());
+            case Statements.Return returnStatement -> returnStatement(returnStatement);
+            case Statements.VariableDeclaration variableDeclarationStatement -> variableDeclaration(variableDeclarationStatement);
+            case Statements.VariableInitialization variableInitializationStatement -> variableInitialization(variableInitializationStatement);
+            case Statements.If ifStatement -> ifStatement(ifStatement);
+            case Statements.IfElse ifElseStatement -> ifElseStatement(ifElseStatement);
+            case Statements.Block blockStatement -> {
+                for (Statements.Statement aBlockStatement : blockStatement.statements()) {
+                    addStatement(aBlockStatement);
+                }
             }
             case Statements.Empty empty -> {
                 // Intentionally left blank
@@ -120,10 +155,10 @@ public class StatementGenerator {
         }
     }
 
-    private void addStatements(LLVMBasicBlockRef block, List<Statements.Statement> statements) {
+    private void addStatements(List<Statements.Statement> statements) {
         this.count = 0;
         for (Statements.Statement statement : statements) {
-            addStatement(block, statement);
+            addStatement(statement);
         }
     }
 
@@ -145,9 +180,15 @@ public class StatementGenerator {
         }
     }
 
-    public void addFunction(LLVMBasicBlockRef block, Function function, LLVMValueRef llvmFunction) {
+    public void addFunction(Function function, LLVMValueRef llvmFunction) {
+        currentLlvmFunction = llvmFunction;
+
+        newBlock(LLVMAppendBasicBlockInContext(generator.llvm.ctx, llvmFunction, "entry"));
         addParameters(function, llvmFunction);
-        addStatements(block, function.getCodeBlock().statements());
+        addStatements(function.getCodeBlock().statements());
+
+        currentLlvmFunction = null;
+        block = null;
     }
 
 }

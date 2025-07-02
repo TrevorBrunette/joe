@@ -187,7 +187,11 @@ public class TypeAnalyzer {
                 }
             }
             case Expressions.MethodInvocation exp -> {
-                // TODO implement
+                for (Expressions.YieldingExpression argument : exp.arguments()) {
+                    System.out.println(this.ctx);
+                    analyzeYielding(argument);
+                }
+                // TODO implement function return type lookup
                 return null;
             }
             default -> throw new IllegalStateException("Unexpected value: " + expression);
