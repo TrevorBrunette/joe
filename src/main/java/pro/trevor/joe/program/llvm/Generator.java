@@ -54,7 +54,7 @@ public class Generator implements AutoCloseable {
         addTopLevelTypes();
         addUndeclaredExternFunctions();
         addExternalFunctions();
-        addDeclaredFunction(file.getFunctions().stream().filter((f) -> f.getIdentifier().equals("main")).findFirst().get());
+        file.getFunctions().forEach(this::addDeclaredFunction);
         if (!write())  {
             return false;
         }

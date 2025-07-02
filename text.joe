@@ -48,6 +48,10 @@ extern fn getchar() u8;
 
 extern fn printf(u8[] str, ...) i32;
 
+fn square(i32 x) i32 {
+    return x * x;
+}
+
 fn main(u32 argc) i32 {
     u8[] arr = new u8[6];
     arr[0] = 'H';
@@ -57,6 +61,6 @@ fn main(u32 argc) i32 {
     arr[4] = 'o';
     arr[5] = 0;
     printf("%s\n", arr);
-    printf("%d arguments were passed\n", argc);
+    printf("%d arguments squared\n", square(argc));
     return 0;
 }
