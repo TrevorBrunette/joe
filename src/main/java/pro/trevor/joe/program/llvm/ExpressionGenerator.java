@@ -138,7 +138,13 @@ public class ExpressionGenerator {
         }
 
         PointerPointer<LLVMValueRef> args = new PointerPointer<>(arguments);
-        return LLVMBuildCall2(generator.llvm.builder, fnType, fn, args, arguments.length, name + ".call." + statementGenerator.getStatementCount());
+        String functionName;
+        if (generator.typeAnalyzer.getType(methodInvocationExpression).orElseThrow() instanceof PrimitiveTypeReference(Primitive primitive) && primitive == Primitive.VOID) {
+            functionName = "";
+        } else {
+            functionName = name;
+        }
+        return LLVMBuildCall2(generator.llvm.builder, fnType, fn, args, arguments.length, functionName);
     }
 
     private LLVMValueRef compExpression(LLVMBasicBlockRef block, Expressions.BinaryExpression expression) {

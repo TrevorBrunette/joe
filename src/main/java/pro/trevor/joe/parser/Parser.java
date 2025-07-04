@@ -647,17 +647,25 @@ public class Parser {
     }
 
     private Type parseType() throws ParseException {
-        if (!token.getType().isPrimitive() && !(token.getType() == TokenType.IDENTIFIER)) {
+
+        Token type = new Token(TokenType.VOID, new Location(0, 0));
+        int arrayLevel = 0;
+
+        if (token.getType().isPrimitive() || (token.getType() == TokenType.IDENTIFIER)) {
+            type = token;
+            consume();
+            while (token.getType() == TokenType.LBRACKET) {
+                consume();
+                expectAndConsume(TokenType.RBRACKET);
+                ++arrayLevel;
+            }
+        } else if (token.getType() == TokenType.LBRACE) {
+
+        } else {
             throw new ParseException(token.getBeginLocation(), "Expected primitive or identifier but got " + token.getType());
         }
-        Token type = token;
-        consume();
-        int arrayLevel = 0;
-        while (token.getType() == TokenType.LBRACKET) {
-            consume();
-            expectAndConsume(TokenType.RBRACKET);
-            ++arrayLevel;
-        }
+
+
         if (type.getType().isPrimitive()) {
             return new Type(type.getType(), arrayLevel);
         } else {

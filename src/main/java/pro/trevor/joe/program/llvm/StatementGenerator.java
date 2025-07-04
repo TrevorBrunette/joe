@@ -115,7 +115,7 @@ public class StatementGenerator {
         LLVMBuildCondBr(generator.llvm.builder, condition, thenBlock, endBlock);
         newBlock(thenBlock);
         addStatement(ifStatement.then());
-        boolean thenTerminated = isCurrentBlockTerminated();
+        boolean thenTerminated = isBlockTerminated(block);
         if (!thenTerminated) {
             LLVMBuildBr(generator.llvm.builder, endBlock);
         }
@@ -131,13 +131,13 @@ public class StatementGenerator {
         newBlock(thenBlock);
         addStatement(ifElseStatement.then());
 
-        boolean thenTerminated = isCurrentBlockTerminated();
+        boolean thenTerminated = isBlockTerminated(block);
         if (!thenTerminated) {
             LLVMBuildBr(generator.llvm.builder, endBlock);
         }
         newBlock(elseBlock);
         addStatement(ifElseStatement.elseStatement());
-        boolean elseTerminated = isCurrentBlockTerminated();
+        boolean elseTerminated = isBlockTerminated(block);
         if (!elseTerminated) {
             LLVMBuildBr(generator.llvm.builder, endBlock);
         }
@@ -161,10 +161,10 @@ public class StatementGenerator {
         newBlock(endBlock);
     }
 
-    private boolean isCurrentBlockTerminated() {
+    private boolean isBlockTerminated(LLVMBasicBlockRef block) {
         LLVMValueRef lastInstruction = LLVMGetLastInstruction(block);
-        if (lastInstruction.isNull()) {
-            return false;
+        if (lastInstruction == null || lastInstruction.isNull()) {
+            return true;
         }
         LLVMValueRef returnInstruction = LLVMIsAReturnInst(lastInstruction);
         return returnInstruction != null;
@@ -216,12 +216,32 @@ public class StatementGenerator {
         }
     }
 
+    private void addImplicitReturn(Function function, LLVMValueRef llvmFunction) {
+        if (function.getReturnType() instanceof PrimitiveTypeReference primitiveTypeReference && primitiveTypeReference.primitive() == Primitive.VOID) {
+            LLVMBasicBlockRef lastBlock = LLVMGetLastBasicBlock(llvmFunction);
+
+            if (lastBlock == null) {
+                lastBlock = LLVMGetEntryBasicBlock(llvmFunction);
+            }
+
+            if (lastBlock != null && isBlockTerminated(lastBlock)) {
+                LLVMPositionBuilderAtEnd(generator.llvm.builder, lastBlock);
+                LLVMBuildRetVoid(generator.llvm.builder);
+            } else {
+                System.err.println("Unable to fix function " + function.getIdentifier() + " implicit return");
+                System.err.println("Attempting to add return anyways");
+                LLVMBuildRetVoid(generator.llvm.builder);
+            }
+        }
+    }
+
     public void addFunction(Function function, LLVMValueRef llvmFunction) {
         currentLlvmFunction = llvmFunction;
 
         newBlock(LLVMAppendBasicBlockInContext(generator.llvm.ctx, llvmFunction, "entry"));
         addParameters(function, llvmFunction);
         addStatements(function.getCodeBlock().statements());
+        addImplicitReturn(function, llvmFunction);
 
         currentLlvmFunction = null;
         block = null;
