@@ -28,7 +28,7 @@ public class Main {
             PrintVisitor printVisitor = new PrintVisitor();
             printVisitor.visit(declaration);
             toFileVisitor.visit(declaration);
-            System.out.println(printVisitor);
+//            System.out.println(printVisitor);
         }
 
         File result = toFileVisitor.getFile();

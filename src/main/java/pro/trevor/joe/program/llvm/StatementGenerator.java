@@ -58,7 +58,6 @@ public class StatementGenerator {
 
     private void variableInitialization(Statements.VariableInitialization variableInitializationStatement) {
         generator.typeAnalyzer.getContext().addLocalType(variableInitializationStatement.name(), variableInitializationStatement.type());
-        System.out.println(variableInitializationStatement);
         switch (variableInitializationStatement.type()) {
             case PrimitiveTypeReference primitiveTypeReference -> {
                 LLVMTypeRef type = generator.getLLVMType(primitiveTypeReference);
@@ -116,7 +115,10 @@ public class StatementGenerator {
         LLVMBuildCondBr(generator.llvm.builder, condition, thenBlock, endBlock);
         newBlock(thenBlock);
         addStatement(ifStatement.then());
-        LLVMBuildBr(generator.llvm.builder, endBlock);
+        boolean thenTerminated = isCurrentBlockTerminated();
+        if (!thenTerminated) {
+            LLVMBuildBr(generator.llvm.builder, endBlock);
+        }
         newBlock(endBlock);
     }
 
@@ -128,11 +130,44 @@ public class StatementGenerator {
         LLVMBuildCondBr(generator.llvm.builder, condition, thenBlock, elseBlock);
         newBlock(thenBlock);
         addStatement(ifElseStatement.then());
-        LLVMBuildBr(generator.llvm.builder, endBlock);
+
+        boolean thenTerminated = isCurrentBlockTerminated();
+        if (!thenTerminated) {
+            LLVMBuildBr(generator.llvm.builder, endBlock);
+        }
         newBlock(elseBlock);
         addStatement(ifElseStatement.elseStatement());
-        LLVMBuildBr(generator.llvm.builder, endBlock);
+        boolean elseTerminated = isCurrentBlockTerminated();
+        if (!elseTerminated) {
+            LLVMBuildBr(generator.llvm.builder, endBlock);
+        }
+
+        if (!thenTerminated || !elseTerminated) {
+            newBlock(endBlock);
+        }
+    }
+
+    private void whileStatement(Statements.While whileStatement) {
+        LLVMBasicBlockRef conditionBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "while." +  getStatementCount());
+        LLVMBasicBlockRef loopBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "loop." +  getStatementCount());
+        LLVMBasicBlockRef endBlock = LLVMAppendBasicBlockInContext(generator.llvm.ctx, currentLlvmFunction, "end." +  getStatementCount());
+        LLVMBuildBr(generator.llvm.builder, conditionBlock);
+        newBlock(conditionBlock);
+        LLVMValueRef condition = expressionGenerator.addExpression(block, whileStatement.condition());
+        LLVMBuildCondBr(generator.llvm.builder, condition, loopBlock, endBlock);
+        newBlock(loopBlock);
+        addStatement(whileStatement.body());
+        LLVMBuildBr(generator.llvm.builder, conditionBlock);
         newBlock(endBlock);
+    }
+
+    private boolean isCurrentBlockTerminated() {
+        LLVMValueRef lastInstruction = LLVMGetLastInstruction(block);
+        if (lastInstruction.isNull()) {
+            return false;
+        }
+        LLVMValueRef returnInstruction = LLVMIsAReturnInst(lastInstruction);
+        return returnInstruction != null;
     }
 
     private void addStatement(Statements.Statement statement) {
@@ -143,6 +178,7 @@ public class StatementGenerator {
             case Statements.VariableInitialization variableInitializationStatement -> variableInitialization(variableInitializationStatement);
             case Statements.If ifStatement -> ifStatement(ifStatement);
             case Statements.IfElse ifElseStatement -> ifElseStatement(ifElseStatement);
+            case Statements.While whileStatement -> whileStatement(whileStatement);
             case Statements.Block blockStatement -> {
                 for (Statements.Statement aBlockStatement : blockStatement.statements()) {
                     addStatement(aBlockStatement);

@@ -66,15 +66,4 @@ public class TypeContext {
         this.locals.clear();
         this.localStorage.clear();
     }
-
-    @Override
-    public String
-    toString() {
-        return "TypeContext{" +
-                "types=" + types +
-                ", typeRefs=" + typeRefs +
-                ", locals=" + locals +
-                ", localStorage=" + localStorage +
-                '}';
-    }
 }

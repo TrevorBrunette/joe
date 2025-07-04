@@ -149,6 +149,7 @@ public class AstToFileVisitor implements AstVisitor {
             this.visit(statement);
             this.currentBlock.statements().add(returnStatement);
         }
+        this.returnStatement = currentBlock;
         if (oldBlock != null) {
             this.currentBlock = oldBlock;
         }

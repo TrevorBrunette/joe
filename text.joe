@@ -52,6 +52,13 @@ fn square(i32 x) i32 {
     return x * x;
 }
 
+fn pow(i32 x, i32 y) i32 {
+    if (y == 0) {
+        return 1;
+    }
+    return x * pow(x, y - 1);
+}
+
 fn main(u32 argc) i32 {
     u8[] arr = new u8[6];
     arr[0] = 'H';
@@ -61,9 +68,16 @@ fn main(u32 argc) i32 {
     arr[4] = 'o';
     arr[5] = 0;
     printf("%s\n", arr);
-    u8[] str = "%d arguments squared\n";
+    u8[] str = "%d arguments pow'd\n";
+
+    u32 count = 0;
+    while (count < 5) {
+        printf("count is %d\n", count);
+        count = count + 1;
+    }
+
     if (argc > 2) {
-        printf(str, square(argc));
+        printf(str, pow(argc, 3));
     } else {
         printf("sorry, argc is too small!\n");
     }

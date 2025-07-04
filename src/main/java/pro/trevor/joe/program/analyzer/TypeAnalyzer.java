@@ -2,11 +2,14 @@ package pro.trevor.joe.program.analyzer;
 
 import pro.trevor.joe.program.File;
 import pro.trevor.joe.program.code.Expressions;
+import pro.trevor.joe.program.code.Function;
+import pro.trevor.joe.program.extern.ExternFunction;
 import pro.trevor.joe.program.type.ArrayTypeReference;
 import pro.trevor.joe.program.type.Primitive;
 import pro.trevor.joe.program.type.PrimitiveTypeReference;
 import pro.trevor.joe.program.type.TypeReference;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -15,10 +18,18 @@ public class TypeAnalyzer {
 
     private final TypeContext ctx;
     private final Map<Expressions.YieldingExpression, TypeReference> types;
+    private final Map<String, TypeReference> functionReturns;
 
     public TypeAnalyzer(File file) {
         this.ctx = new TypeContext(file);
         this.types = new IdentityHashMap<>();
+        this.functionReturns = new HashMap<>();
+        for (Function function : file.getFunctions()) {
+            functionReturns.put(function.getIdentifier(), function.getReturnType());
+        }
+        for (ExternFunction function : file.getExternFunctions()) {
+            functionReturns.put(function.name(), function.returnType());
+        }
     }
 
     public TypeContext getContext() {
@@ -38,6 +49,10 @@ public class TypeAnalyzer {
 
     public Optional<TypeReference> getType(Expressions.Expression expression) {
         return Optional.ofNullable(types.get(expression));
+    }
+
+    public Optional<TypeReference> getFunctionReturnType(String identifier) {
+        return Optional.ofNullable(functionReturns.get(identifier));
     }
 
     private TypeReference analyzeYielding(Expressions.YieldingExpression expression) throws AnalyzeException {
@@ -188,11 +203,21 @@ public class TypeAnalyzer {
             }
             case Expressions.MethodInvocation exp -> {
                 for (Expressions.YieldingExpression argument : exp.arguments()) {
-                    System.out.println(this.ctx);
                     analyzeYielding(argument);
                 }
-                // TODO implement function return type lookup
-                return null;
+
+                if (exp.method() instanceof Expressions.Variable functionVariable) {
+                    Optional<TypeReference> maybeFunctionReturnType = getFunctionReturnType(functionVariable.name());
+                    if (maybeFunctionReturnType.isPresent()) {
+                        TypeReference functionReturnType = maybeFunctionReturnType.get();
+                        this.types.put(exp, functionReturnType);
+                        return functionReturnType;
+                    } else {
+                        throw new IllegalStateException("Call to undeclared function: " + functionVariable.name());
+                    }
+                } else {
+                    throw new IllegalStateException("Unimplemented function call basis " + exp.method());
+                }
             }
             default -> throw new IllegalStateException("Unexpected value: " + expression);
         }

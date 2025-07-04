@@ -2,8 +2,10 @@ package pro.trevor.joe.program.llvm;
 
 import org.bytedeco.javacpp.PointerPointer;
 import org.bytedeco.llvm.LLVM.LLVMBasicBlockRef;
+import org.bytedeco.llvm.LLVM.LLVMBuilderRef;
 import org.bytedeco.llvm.LLVM.LLVMTypeRef;
 import org.bytedeco.llvm.LLVM.LLVMValueRef;
+import org.bytedeco.llvm.global.LLVM;
 import pro.trevor.joe.program.code.Expressions;
 import pro.trevor.joe.program.type.ArrayTypeReference;
 import pro.trevor.joe.program.type.Primitive;
@@ -53,19 +55,19 @@ public class ExpressionGenerator {
                 return LLVMConstInt(i1Type, boolExpression.value() ? 1 : 0, 0);
             }
             case Expressions.Addition additionExpression -> {
-                return LLVMBuildAdd(generator.llvm.builder, addExpression(block, additionExpression.left()), addExpression(block, additionExpression.right()), "add." + statementGenerator.getStatementCount());
+                return arithmetic(block, additionExpression, LLVM::LLVMBuildAdd, "add");
             }
             case Expressions.Subtraction subtractionExpression -> {
-                return LLVMBuildSub(generator.llvm.builder, addExpression(block, subtractionExpression.left()), addExpression(block, subtractionExpression.right()), "sub." + statementGenerator.getStatementCount());
+                return arithmetic(block, subtractionExpression, LLVM::LLVMBuildSub, "sub");
             }
             case Expressions.Multiply multiplyExpression -> {
-                return LLVMBuildMul(generator.llvm.builder, addExpression(block, multiplyExpression.left()), addExpression(block, multiplyExpression.right()), "mul." + statementGenerator.getStatementCount());
+                return arithmetic(block, multiplyExpression, LLVM::LLVMBuildMul, "mul");
             }
             case Expressions.Divide divideExpression -> {
-                return LLVMBuildSDiv(generator.llvm.builder, addExpression(block, divideExpression.left()), addExpression(block, divideExpression.right()), "div." + statementGenerator.getStatementCount());
+                return arithmetic(block, divideExpression, LLVM::LLVMBuildSDiv, "div");
             }
             case Expressions.Modulo moduloExpression -> {
-                return LLVMBuildSRem(generator.llvm.builder, addExpression(block, moduloExpression.left()), addExpression(block, moduloExpression.right()), "mod." + statementGenerator.getStatementCount());
+                return arithmetic(block, moduloExpression, LLVM::LLVMBuildSRem, "mod");
             }
             case Expressions.Equals equalsExpression -> {
                 return compExpression(block, equalsExpression);
@@ -207,6 +209,29 @@ public class ExpressionGenerator {
             return LLVMBuildStore(generator.llvm.builder, toStore, valuePtr);
         } else {
             throw new IllegalStateException("Unimplemented assignment for LHS: " + assignmentExpression.left().getClass().getSimpleName());
+        }
+    }
+
+    private interface ArithmeticFunction {
+        LLVMValueRef apply(LLVMBuilderRef builder, LLVMValueRef left, LLVMValueRef right, String name);
+    }
+
+    private LLVMValueRef arithmetic(LLVMBasicBlockRef block, Expressions.BinaryExpression expression, ArithmeticFunction function, String name) {
+        LLVMValueRef left = addExpression(block, expression.left());
+        LLVMValueRef right = addExpression(block, expression.right());
+
+        TypeReference leftType = generator.typeAnalyzer.getType(expression.left()).orElseThrow();
+        TypeReference rightType = generator.typeAnalyzer.getType(expression.right()).orElseThrow();
+
+        if (leftType instanceof PrimitiveTypeReference leftPrimitive && rightType instanceof PrimitiveTypeReference rightPrimitive) {
+            Primitive resultType = Primitive.arithmetic(leftPrimitive.primitive(), rightPrimitive.primitive());
+            PrimitiveTypeReference resultTypeRef = new PrimitiveTypeReference(resultType);
+            LLVMTypeRef resultLlvmType = generator.getLLVMType(resultTypeRef);
+            LLVMValueRef leftCast = Util.cast(generator, left, resultLlvmType);
+            LLVMValueRef rightCast = Util.cast(generator, right, resultLlvmType);
+            return function.apply(generator.llvm.builder, leftCast, rightCast, name + "." + statementGenerator.getStatementCount());
+        } else {
+            throw new IllegalStateException("Arithmetic of non-primitives: " + leftType + " and " + rightType);
         }
     }
 

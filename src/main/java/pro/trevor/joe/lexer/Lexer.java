@@ -120,9 +120,10 @@ public class Lexer {
         StringBuilder sb = new StringBuilder("'");
         boolean escaped = false;
         while (nextChar() != '\'' || escaped) {
+            escaped = false;
             sb.append(c);
-            if (c == '\'') {
-                escaped = !escaped;
+            if (c == '\\') {
+                escaped = true;
             }
         }
         sb.append(c);
@@ -134,9 +135,10 @@ public class Lexer {
         StringBuilder sb = new StringBuilder("\"");
         boolean escaped = false;
         while (nextChar() != '"' || escaped) {
+            escaped = false;
             sb.append(c);
-            if (c == '\'') {
-                escaped = !escaped;
+            if (c == '\\') {
+                escaped = true;
             }
         }
         sb.append(c);
